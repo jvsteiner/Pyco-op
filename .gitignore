@@ -8,6 +8,5 @@ tmp/*
 !static/custom.js
 !static/style.css
 env/*
-migrations/*
 !env/email.py.example
 !env/env.py.example

@@ -1,13 +1,13 @@
 // your custom javascript goes here
 // 
-var MyViewModel = function (config) { //for order viewing
+var ItemViewModel = function (config) { //for order viewing
   var self = this;
 
 
 };
 
-var mvm = new MyViewModel({'order': [{'items': []}], 'myitems': []);
-ko.applyBindings(mvm,$("#orders")[0]);
+var mvm = new ItemViewModel({'order': [{'items': []}], 'myitems': []);
+ko.applyBindings(mvm,$("#myitems")[0]);
 
 $("button#submititems").live("click", function() {
   // ws.send(JSON.stringify({'action': {'type': 'LOGIN', 'userid': self.username(), 'password': 'test12'}}));

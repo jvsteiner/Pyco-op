@@ -19,19 +19,18 @@
 				<span class="icon-bar"></span>
 				<span class="icon-bar"></span>
 			</button>
-			<a class="navbar-brand" href="{{ url_for('index') }}">Flask in a Can</a>
+			<a class="navbar-brand" href="{{ url_for('index') }}">PyCo-op</a>
 		</div>
 
 		<!-- Collect the nav links, forms, and other content for toggling -->
 		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 			<ul class="nav navbar-nav">
-				<li class="active"><a href="#">Link</a></li>
-				<li><a href="{{ url_for('order') }}">Order</a></li>
-				<li><a href="{{ url_for('farmers') }}">Farmers</a></li>
+				<li {% if request.path == '/order' %} class='active' {% endif %}><a href="{{ url_for('order') }}">Order</a></li>
+				<li {% if request.path == '/farmers' %} class='active' {% endif %}><a href="{{ url_for('farmers') }}">Farmers</a></li>
 			</ul>
 			<ul class="nav navbar-nav navbar-right">
 				{% if current_user.is_authenticated() %}
-				<li><a href="{{ url_for('profile') }}">My Account</a></li>
+				<li {% if request.path == '/profile' %} class='active' {% endif %}><a href="{{ url_for('profile') }}">My Account</a></li>
 				<li><a href="{{ url_for('security.logout') }}">Sign Out</a></li>
 				{% else %}
 				<li><a href="{{ url_for('security.login') }}">Sign In</a></li>
@@ -48,7 +47,7 @@
 </div>
 <div id="footer">
 	<div class="container">
-		<p class="muted credit">Example courtesy <a href="#">Your Footer info</a>.</p>
+		<p class="muted credit">Written by <a href="https://github.com/jvsteiner">Jamie Steiner</a></p>
 	</div>
 </div>
 </html>

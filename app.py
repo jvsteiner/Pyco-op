@@ -80,6 +80,27 @@ class User(db.Model, UserMixin):
     def __str__(self):
         return '<User id=%s email=%s>' % (self.id, self.email)
 
+class Item(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255))
+    description = db.Column(db.String(255))
+    price = db.Column(db.Float())
+    quantity_per_unit = db.Column(db.Integer())
+    max_available = db.Column(db.Float())
+    unit = db.Column(db.String(255))
+    user = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+    def __str__(self):
+        return self.name
+
+class Order(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    week = db.Column(db.Integer())
+    item = db.Column(db.Integer, db.ForeignKey('item.id'))
+    amount = db.Column(db.Float())
+    price = db.Column(db.Float())
+    user = db.Column(db.Integer, db.ForeignKey('user.id'))
+
 # Setup Flask-Security
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
@@ -98,6 +119,30 @@ def profile():
     else:
         return redirect(url_for_security('login'))
         
+@app.route('/farmers')
+def farmers():
+    if current_user.has_role('farmer'):
+        return render_template('farmers.html')
+    else:
+        return redirect(url_for_security('login'))
+
+@app.route('/order')
+def order():
+    if current_user.has_role('buyer'):
+        return render_template('order.html')
+    else:
+        return redirect(url_for_security('login'))
+
+@app.route('/farmers/update')
+def farmers_update():
+    if current_user.has_role('farmer'):
+        pass
+
+@app.route('/order/update')
+def order_update():
+    if current_user.has_role('buyer'):
+        pass
+
 admin = Admin(app)
 
 # Admin Views
@@ -113,6 +158,8 @@ class MyFileView(FileAdmin):
 
 admin.add_view(MyModelView(User, db.session))
 admin.add_view(MyModelView(Role, db.session))
+admin.add_view(MyModelView(Item, db.session))
+admin.add_view(MyModelView(Order, db.session))
 path = op.join(op.dirname(__file__), 'static')
 admin.add_view(MyFileView(path, '/static/', name='Static Files'))
 

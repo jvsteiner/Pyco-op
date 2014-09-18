@@ -1,8 +1,25 @@
 {% extends "layout.html" %}
 {% block body %}
 <div class="row">
-  <div class="form-group col-lg-9 col-md-9 col-sm-9">
+  <div class="form-group col-lg-9 col-md-9 col-sm-9" id='orders'>
     <h4>Stub for farmers - you are logged in as {{ current_user.email }}</h4>
+    <table class="table table-striped table-bordered table-condensed">
+      <thead><tr>
+        <th>Name</th><th>Description</th><th>Units</th><th>Quantity/Unit</th><th>Price/Unit</th><th>Available</th>
+      </tr></thead>
+      <tbody data-bind="foreach: myitems">
+        <td data-bind="text: $data.description"></td>
+        <td data-bind="text: $data.units"></td>
+        <td data-bind="text: $data.quantity_per_unit"></td>
+        <td data-bind="text: $data.price"></td>
+        <td data-bind="text: $data.available"></td>
+      </tbody>
+    </table>
+    <button id="submititems" type="button" class="btn btn-primary">Update My Items</button>
   </div>
 </div>
+<body>
+  {% include "_scripts.html" %}
+  <script src="{{ url_for('static', filename='custom.js') }}"></script>
+</body>
 {% endblock %}

@@ -5,4 +5,8 @@
     <h4>Stub for orders - you are logged in as {{ current_user.email }}</h4>
   </div>
 </div>
+<body>
+  {% include "_scripts.html" %}
+  <script src="{{ url_for('static', filename='custom.js') }}"></script>
+</body>
 {% endblock %}

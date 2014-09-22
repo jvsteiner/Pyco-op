@@ -7,7 +7,9 @@ from flask.ext.admin import Admin, BaseView, expose
 from flask.ext.admin.contrib.sqla import ModelView
 from flask.ext.admin.contrib.fileadmin import FileAdmin
 import os.path as op
+import json
 from flask.ext.sqlalchemy import SQLAlchemy
+from sqlalchemy import asc, desc
 from flask.ext.script import Shell, Manager
 from flask.ext.migrate import Migrate, MigrateCommand
 from flask.ext.security import Security, SQLAlchemyUserDatastore, UserMixin, RoleMixin, LoginForm, \
@@ -76,6 +78,8 @@ class User(db.Model, UserMixin):
     confirmed_at = db.Column(db.DateTime())
     roles = db.relationship('Role', secondary=roles_users,
                             backref=db.backref('users', lazy='dynamic'))
+    items = db.relationship('Item', backref=db.backref('user', lazy='joined'), lazy='dynamic')
+    orders = db.relationship('Order', backref=db.backref('user', lazy='joined'), lazy='dynamic')
 
     def __str__(self):
         return '<User id=%s email=%s>' % (self.id, self.email)
@@ -85,10 +89,11 @@ class Item(db.Model):
     name = db.Column(db.String(255))
     description = db.Column(db.String(255))
     price = db.Column(db.Float())
-    quantity_per_unit = db.Column(db.Integer())
     max_available = db.Column(db.Float())
     unit = db.Column(db.String(255))
-    user = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    active = db.Column(db.Boolean())
+    orders = db.relationship('Order', backref=db.backref('item', lazy='joined'), lazy='dynamic')
 
     def __str__(self):
         return self.name
@@ -96,10 +101,9 @@ class Item(db.Model):
 class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     week = db.Column(db.Integer())
-    item = db.Column(db.Integer, db.ForeignKey('item.id'))
+    item_id = db.Column(db.Integer, db.ForeignKey('item.id'))
     amount = db.Column(db.Float())
-    price = db.Column(db.Float())
-    user = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
 # Setup Flask-Security
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
@@ -129,6 +133,13 @@ def farmers():
 @app.route('/order')
 def order():
     if current_user.has_role('buyer'):
+        # obj = []
+        # results = Item.query.filter(Item.active == True).order_by(asc(Item.user_id)).all()
+        # print results
+        # for i in range(len(results)):
+        #     obj.append({'name': results[i].name, 'description': results[i].description, 'price': results[i].price, 'units': results[i].unit, 'available': results[i].max_available, 'farmer': results[i].user.email, 'id': results[i].id})
+        # print obj
+
         return render_template('order.html')
     else:
         return redirect(url_for_security('login'))
@@ -141,8 +152,12 @@ def farmers_update():
 @app.route('/order/update')
 def order_update():
     if current_user.has_role('buyer'):
-        pass
-
+        obj = {'items': []}
+        results = Item.query.filter(Item.active == True).order_by(asc(Item.user_id)).all()
+        for i in range(len(results)):
+            obj['items'].append({'name': results[i].name, 'description': results[i].description, 'price': results[i].price, 'units': results[i].unit, 'available': results[i].max_available, 'farmer': results[i].user.email, 'id': results[i].id})
+        print obj
+        return json.dumps(obj)
 admin = Admin(app)
 
 # Admin Views

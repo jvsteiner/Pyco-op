@@ -1,19 +1,42 @@
 // your custom javascript goes here
 // 
-var ItemViewModel = function (config) { //for order viewing
-  var self = this;
+$(document).ready(function(){
+  function Order(description, units) {
+      var self = this;
+      self.description = description;
+      self.units = units;
+      self.quantity = ko.observable('');
+  }
 
+  function ItemViewModel(config) { //for order viewing
+    var self = this;
+    self.orders = ko.observableArray([]);
+    // Operations
+    self.addOrder = function(description, units) {
+      console.log(description);
+      self.orders.push(new Order(description, units));
+    }
+    // var subTotal = function(quantity, price) {
+    //   return quantity * price
+    // };
+    ko.mapping.fromJS(config, {}, self);
+  }
 
-};
+  var ivm = new ItemViewModel({'items': []});
+  ko.applyBindings(ivm,$("#myitems")[0]);
 
-var mvm = new ItemViewModel({'order': [{'items': []}], 'myitems': []);
-ko.applyBindings(mvm,$("#myitems")[0]);
+  // var ivm = new ItemViewModel();
+  $.getJSON("/order/update", function (data) {
+    console.log(data);
+    ko.mapping.fromJS(data, ivm);
+  });
 
-$("button#submititems").live("click", function() {
-  // ws.send(JSON.stringify({'action': {'type': 'LOGIN', 'userid': self.username(), 'password': 'test12'}}));
-});
-$("button#submitorder").live("click", function() {
-  // ws.send(JSON.stringify({'action': {'type': 'LOGIN', 'userid': self.username(), 'password': 'test12'}}));
+  $("button#submititems").live("click", function() {
+    // ws.send(JSON.stringify({'action': {'type': 'LOGIN', 'userid': self.username(), 'password': 'test12'}}));
+  });
+  $("button#submitorder").live("click", function() {
+    // ws.send(JSON.stringify({'action': {'type': 'LOGIN', 'userid': self.username(), 'password': 'test12'}}));
+  });
 });
 /*
 JSON SAMPLE = {

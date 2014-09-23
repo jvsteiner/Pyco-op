@@ -105,6 +105,12 @@ class Order(db.Model):
     amount = db.Column(db.Float())
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
+    def __init__(self, week, item_id, amount, user_id):
+        self.week = week
+        self.item_id = item_id
+        self.amount = amount
+        self.user_id = user_id
+
 # Setup Flask-Security
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
@@ -149,15 +155,23 @@ def farmers_update():
     if current_user.has_role('farmer'):
         pass
 
-@app.route('/order/update')
+@app.route('/order/update', methods=['GET', 'POST'])
 def order_update():
     if current_user.has_role('buyer'):
-        obj = {'items': []}
-        results = Item.query.filter(Item.active == True).order_by(asc(Item.user_id)).all()
-        for i in range(len(results)):
-            obj['items'].append({'name': results[i].name, 'description': results[i].description, 'price': results[i].price, 'units': results[i].unit, 'available': results[i].max_available, 'farmer': results[i].user.email, 'id': results[i].id})
-        print obj
-        return json.dumps(obj)
+        if request.method == 'GET':
+            obj = {'items': []}
+            results = Item.query.filter(Item.active == True).order_by(asc(Item.user_id)).all()
+            for i in range(len(results)):
+                obj['items'].append({'name': results[i].name, 'description': results[i].description, 'price': results[i].price, 'units': results[i].unit, 'available': results[i].max_available, 'farmer': results[i].user.email, 'id': results[i].id})
+            print obj
+            return json.dumps(obj)
+        elif request.method == 'POST':
+            orders = request.get_json(force=True)
+            for order in orders:
+                new = Order(4, order['id'], order['amount'], current_user.id)
+                db.session.add(new)
+                db.session.commit()
+            return 'Order POSTed'
 admin = Admin(app)
 
 # Admin Views

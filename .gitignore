@@ -5,7 +5,7 @@ venv/
 static/*
 config/*
 tmp/*
-!static/custom.js
+!static/custom*.js
 !static/style.css
 env/*
 !env/email.py.example

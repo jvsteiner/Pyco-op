@@ -2,7 +2,7 @@
 // 
 $(document).ready(function(){
 
-  function ItemViewModel(config) { //for order viewing
+  function OrderViewModel(config) { //for order viewing
     var self = this;
     self.orders = ko.observableArray([]);
     self.total = ko.computed(function(){
@@ -40,8 +40,8 @@ $(document).ready(function(){
 
     $.getJSON("/order/update", function (data) {
       // console.log(data);
-      ko.mapping.fromJS(data, ivm);
-      console.log(self.old_orders());
+      ko.mapping.fromJS(data, ovm);
+      // console.log(self.old_orders());
       ko.utils.arrayForEach(self.old_orders(), function(old_order) {
         var the_order = new Order(old_order.id(), old_order.description(), old_order.units(), old_order.price());
         the_order.quantity(old_order.quantity());
@@ -50,7 +50,7 @@ $(document).ready(function(){
         // self.orders.push(the_order);
       });
       self.orders.valueHasMutated();
-      console.log(self.orders());
+      // console.log(self.orders());
     });
 
     $("button#submitorder").live("click", function() {
@@ -74,10 +74,10 @@ $(document).ready(function(){
     }
   };
 
-  var ivm = new ItemViewModel({'items': [], 'orders': []});
-  ko.applyBindings(ivm,$("#myitems")[0]);
+  var ovm = new OrderViewModel({'items': [], 'orders': []});
+  ko.applyBindings(ovm,$("#myorders")[0]);
 
-  // var ivm = new ItemViewModel();
+  // var ovm = new OrderViewModel();
 
   $("button#submititems").live("click", function() {
     // ws.send(JSON.stringify({'action': {'type': 'LOGIN', 'userid': self.username(), 'password': 'test12'}}));

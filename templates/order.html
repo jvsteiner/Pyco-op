@@ -34,10 +34,10 @@
         <td data-bind="text: $data.units"></td>
         <td data-bind="currency: $data.price, symbol: '€'"></td>
         <td data-bind="currency: $data.subtotal, symbol: '€'"></td>
-        <td><button data-bind="click: $root.removeOrder.bind($data, $data.id)" type="button" class="btn btn-primary btn-xs btn-danger">X</button></td>
+        <td><button data-bind="click: $root.removeOrder.bind($data, $data.item_id)" type="button" class="btn btn-primary btn-xs btn-danger">X</button></td>
       </tbody>
     </table>
-    <p class="pull-right">Grand Total: <span data-bind="currency: $root.total, symbol: '€'"></span></p>
+    <p class="pull-right">Order Total: <span data-bind="currency: $root.total, symbol: '€'"></span></p>
     <button id="submitorder" type="button" class="btn btn-primary">Submit Order</button>
   </div>
 </div>

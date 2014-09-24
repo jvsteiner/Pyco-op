@@ -4,7 +4,7 @@ $(document).ready(function(){
 
   function ItemViewModel(config) { //for order viewing
     var self = this;
-    self.orders = ko.observableArray([new Order(1,'a','b',1)]);
+    self.orders = ko.observableArray([]);
     self.total = ko.computed(function(){
       var tot=0;
       ko.utils.arrayForEach(self.orders(), function(order) {
@@ -13,9 +13,9 @@ $(document).ready(function(){
       return tot
     }, self);
 
-    function Order(id, description, units, price) {
+    function Order(item_id, description, units, price) {
       var self = this;
-      self.id = id;
+      self.item_id = item_id;
       self.description = description;
       self.units = units;
       self.price = price;
@@ -25,18 +25,33 @@ $(document).ready(function(){
       }, self);
     }
     // Operations
-    self.addOrder = function(id, description, units, price) {
-      var theItem = new Order(id, description, units, price);
+    self.addOrder = function(item_id, description, units, price) {
+      var theItem = new Order(item_id, description, units, price);
       var match = ko.utils.arrayFirst(self.orders(), function(item) {
-        return theItem.id === item.id;
+        return theItem.item_id === item.item_id;
       });
       if (!match) {
         self.orders.push(theItem);
       };
     };
-    self.removeOrder = function(id) {
-      self.orders.remove(function(item) { return item.id === id })
+    self.removeOrder = function(item_id) {
+      self.orders.remove(function(item) { return item.item_id === item_id })
     };
+
+    $.getJSON("/order/update", function (data) {
+      // console.log(data);
+      ko.mapping.fromJS(data, ivm);
+      console.log(self.old_orders());
+      ko.utils.arrayForEach(self.old_orders(), function(old_order) {
+        var the_order = new Order(old_order.id(), old_order.description(), old_order.units(), old_order.price());
+        the_order.quantity(old_order.quantity());
+        the_order.id = old_order.id();
+        ko.utils.arrayPushAll(self.orders(), [the_order]);
+        // self.orders.push(the_order);
+      });
+      self.orders.valueHasMutated();
+      console.log(self.orders());
+    });
 
     $("button#submitorder").live("click", function() {
       $.post("/order/update", ko.toJSON(self.orders()), function(returnedData) {
@@ -59,15 +74,10 @@ $(document).ready(function(){
     }
   };
 
-  var ivm = new ItemViewModel({'items': []});
+  var ivm = new ItemViewModel({'items': [], 'orders': []});
   ko.applyBindings(ivm,$("#myitems")[0]);
 
   // var ivm = new ItemViewModel();
-  $.getJSON("/order/update", function (data) {
-    // console.log(data);
-    ko.mapping.fromJS(data, ivm);
-  });
-
 
   $("button#submititems").live("click", function() {
     // ws.send(JSON.stringify({'action': {'type': 'LOGIN', 'userid': self.username(), 'password': 'test12'}}));

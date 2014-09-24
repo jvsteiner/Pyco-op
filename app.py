@@ -173,20 +173,34 @@ def farmers_update():
 @app.route('/order/update', methods=['GET', 'POST'])
 def order_update():
     if current_user.has_role('buyer'):
+        the_orders = Order.query.filter(Order.user_id == current_user.id and Order.week == 4).all()
+        the_order_ids = [i.id for i in the_orders]
         if request.method == 'GET':
-            obj = {'items': [], 'orders': []}
-            results = Item.query.filter(Item.active == True).order_by(asc(Item.user_id)).all()
-            for i in range(len(results)):
-                obj['items'].append({'name': results[i].name, 'description': results[i].description, 'price': results[i].price, 'units': results[i].unit, 'available': results[i].max_available, 'farmer': results[i].user.email, 'id': results[i].id})
-            print obj
+            obj = {'items': [], 'old_orders': []}
+            the_items = Item.query.filter(Item.active == True).order_by(asc(Item.user_id)).all()
+            for i in range(len(the_items)):
+                obj['items'].append({'name': the_items[i].name, 'description': the_items[i].description, 'price': the_items[i].price, 'units': the_items[i].unit, 'available': the_items[i].max_available, 'farmer': the_items[i].user.email, 'id': the_items[i].id})
+            for i in range(len(the_orders)):
+                # print (the_orders[i].id)
+                obj['old_orders'].append({'description': the_orders[i].item.description, 'quantity': the_orders[i].amount, 'units': the_orders[i].item.unit, 'price': the_orders[i].item.price, 'id': the_orders[i].id, 'item_id': the_orders[i].item_id})
             return json.dumps(obj)
         elif request.method == 'POST':
             orders = request.get_json(force=True)
             print orders
+            order_ids = []
+            for i in orders:
+                try: order_ids.append(i['id'])
+                except: pass
             for order in orders:
-                new = Order(4, order['id'], order['quantity'], current_user.id)
-                db.session.add(new)
+                new = Order(4, order['item_id'], order['quantity'], current_user.id)
+                try: new.id = order['id']
+                except: pass
+                db.session.merge(new)
                 db.session.commit()
+            for order in the_orders:
+                if not order.id in order_ids:
+                    db.session.delete(order)
+                    db.session.commit()
             return 'Order POSTed'
     else:
         abort(404)

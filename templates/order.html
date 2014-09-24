@@ -23,6 +23,9 @@
 <!--     </div> --> 
   </div>
   <div class="form-group col-lg-6 col-md-6 col-sm-6">
+    <div data-bind="foreach: status">
+      <div data-bind="alert: $data"></div>
+    </div>
     <h4>Your Order:</h4>
     <table class="table table-striped table-bordered table-condensed">
       <thead>

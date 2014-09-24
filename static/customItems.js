@@ -5,7 +5,7 @@ $(document).ready(function(){
   function ItemViewModel(config) { //for order viewing
     var self = this;
     self.items = ko.observableArray([]);
-    self.status = ko.observable();
+    self.status = ko.observableArray([]);
 
     function Item() {
       var self = this;
@@ -47,8 +47,7 @@ $(document).ready(function(){
 
     $("button#submititems").live("click", function() {
       $.post("/farmers/update", ko.toJSON(self.items()), function(returnedData) {
-        console.log(returnedData);
-        self.status(returnedData);
+        self.status([JSON.parse(returnedData)]);
       })
     });
     $("button#newitem").live("click", function() {

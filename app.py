@@ -1,5 +1,5 @@
 
-from flask import Flask, render_template, request, session, redirect, url_for, abort
+from flask import Flask, flash, render_template, request, session, redirect, url_for, abort
 from flask.ext.babel import Babel
 from flask.ext.mail import Mail
 from flask.ext.bcrypt import *
@@ -179,7 +179,7 @@ def farmers_update():
                 if not item.id in item_ids:
                     db.session.delete(item)
                     db.session.commit()
-            return 'Items POSTed'
+            return json.dumps({'message': 'Your Items have been updated', 'priority': 'success'})
     else:
         abort(404)
 
@@ -214,7 +214,7 @@ def order_update():
                 if not order.id in order_ids:
                     db.session.delete(order)
                     db.session.commit()
-            return 'Order POSTed'
+            return json.dumps({'message': 'Your Order has been placed', 'priority': 'success'})
     else:
         abort(404)
 

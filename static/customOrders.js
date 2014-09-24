@@ -5,6 +5,7 @@ $(document).ready(function(){
   function OrderViewModel(config) { //for order viewing
     var self = this;
     self.orders = ko.observableArray([]);
+    self.status = ko.observableArray([]);
     self.total = ko.computed(function(){
       var tot=0;
       ko.utils.arrayForEach(self.orders(), function(order) {
@@ -55,7 +56,7 @@ $(document).ready(function(){
 
     $("button#submitorder").live("click", function() {
       $.post("/order/update", ko.toJSON(self.orders()), function(returnedData) {
-        console.log(returnedData);
+        self.status([JSON.parse(returnedData)]);
       })
     });
     ko.mapping.fromJS(config, {}, self);

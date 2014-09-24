@@ -1,5 +1,5 @@
 
-from flask import Flask, render_template, request, session, redirect, url_for
+from flask import Flask, render_template, request, session, redirect, url_for, abort
 from flask.ext.babel import Babel
 from flask.ext.mail import Mail
 from flask.ext.bcrypt import *
@@ -96,7 +96,14 @@ class Item(db.Model):
     orders = db.relationship('Order', backref=db.backref('item', lazy='joined'), lazy='dynamic')
 
     def __str__(self):
-        return self.name
+        return '<farmer=%s item=%s>' % (self.user.email, self.name)
+
+    def __init__(self, name, description, price, max_available, unit):
+        self.name = name
+        self.description = description
+        self.price = price
+        self.max_available = max_available
+        self.unit = unit
 
 class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -139,13 +146,6 @@ def farmers():
 @app.route('/order')
 def order():
     if current_user.has_role('buyer'):
-        # obj = []
-        # results = Item.query.filter(Item.active == True).order_by(asc(Item.user_id)).all()
-        # print results
-        # for i in range(len(results)):
-        #     obj.append({'name': results[i].name, 'description': results[i].description, 'price': results[i].price, 'units': results[i].unit, 'available': results[i].max_available, 'farmer': results[i].user.email, 'id': results[i].id})
-        # print obj
-
         return render_template('order.html')
     else:
         return redirect(url_for_security('login'))
@@ -153,13 +153,28 @@ def order():
 @app.route('/farmers/update')
 def farmers_update():
     if current_user.has_role('farmer'):
-        pass
+        if request.method == 'GET':
+            obj = {'items': []}
+            results = Item.query.filter(Item.user == current_user).all()
+            for i in range(len(results)):
+                obj['items'].append({'name': results[i].name, 'description': results[i].description, 'price': results[i].price, 'units': results[i].unit, 'available': results[i].max_available, 'farmer': results[i].user.email, 'id': results[i].id})
+            print obj
+            return json.dumps(obj)
+        elif request.method == 'POST':
+            items = request.get_json(force=True)
+            for item in items:
+                new = Item(4, item['id'], item['amount'], current_user.id)
+                db.session.add(new)
+                db.session.commit()
+            return 'Items POSTed'
+    else:
+        abort(404)
 
 @app.route('/order/update', methods=['GET', 'POST'])
 def order_update():
     if current_user.has_role('buyer'):
         if request.method == 'GET':
-            obj = {'items': []}
+            obj = {'items': [], 'orders': []}
             results = Item.query.filter(Item.active == True).order_by(asc(Item.user_id)).all()
             for i in range(len(results)):
                 obj['items'].append({'name': results[i].name, 'description': results[i].description, 'price': results[i].price, 'units': results[i].unit, 'available': results[i].max_available, 'farmer': results[i].user.email, 'id': results[i].id})
@@ -167,11 +182,15 @@ def order_update():
             return json.dumps(obj)
         elif request.method == 'POST':
             orders = request.get_json(force=True)
+            print orders
             for order in orders:
-                new = Order(4, order['id'], order['amount'], current_user.id)
+                new = Order(4, order['id'], order['quantity'], current_user.id)
                 db.session.add(new)
                 db.session.commit()
             return 'Order POSTed'
+    else:
+        abort(404)
+
 admin = Admin(app)
 
 # Admin Views

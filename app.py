@@ -98,12 +98,14 @@ class Item(db.Model):
     def __str__(self):
         return '<farmer=%s item=%s>' % (self.user.email, self.name)
 
-    def __init__(self, name, description, price, max_available, unit):
+    def __init__(self, name, description, price, max_available, unit, active, user_id):
         self.name = name
         self.description = description
         self.price = price
         self.max_available = max_available
         self.unit = unit
+        self.active = active
+        self.user_id = user_id
 
 class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -150,22 +152,33 @@ def order():
     else:
         return redirect(url_for_security('login'))
 
-@app.route('/farmers/update')
+@app.route('/farmers/update', methods=['GET', 'POST'])
 def farmers_update():
     if current_user.has_role('farmer'):
+        results = Item.query.filter(Item.user == current_user).all()
+        # the_item_ids = [i.id for i in results]
         if request.method == 'GET':
-            obj = {'items': []}
-            results = Item.query.filter(Item.user == current_user).all()
+            obj = {'old_items': []}
             for i in range(len(results)):
-                obj['items'].append({'name': results[i].name, 'description': results[i].description, 'price': results[i].price, 'units': results[i].unit, 'available': results[i].max_available, 'farmer': results[i].user.email, 'id': results[i].id})
+                obj['old_items'].append({'name': results[i].name, 'description': results[i].description, 'price': results[i].price, 'max_available': results[i].max_available, 'units': results[i].unit, 'active': results[i].active, 'id': results[i].id})
             print obj
             return json.dumps(obj)
         elif request.method == 'POST':
             items = request.get_json(force=True)
+            item_ids = []
+            for i in items:
+                try: item_ids.append(i['id'])
+                except: pass
             for item in items:
-                new = Item(4, item['id'], item['amount'], current_user.id)
-                db.session.add(new)
+                new = Item(item['name'], item['description'], item['price'], item['max_available'], item['units'], item['active'], current_user.id)
+                try: new.id = item['id']
+                except: pass
+                db.session.merge(new)
                 db.session.commit()
+            for item in results:
+                if not item.id in item_ids:
+                    db.session.delete(item)
+                    db.session.commit()
             return 'Items POSTed'
     else:
         abort(404)

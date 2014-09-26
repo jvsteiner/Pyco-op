@@ -109,7 +109,7 @@ class Item(db.Model):
 
 class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    week = db.Column(db.Integer())
+    week_id = db.Column(db.Integer, db.ForeignKey('week.id'))
     item_id = db.Column(db.Integer, db.ForeignKey('item.id'))
     amount = db.Column(db.Float())
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
@@ -119,6 +119,12 @@ class Order(db.Model):
         self.item_id = item_id
         self.amount = amount
         self.user_id = user_id
+
+class Week(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    current = db.Column(db.Boolean())
+    active = db.Column(db.Boolean())
+    orders = db.relationship('Order', backref=db.backref('week', lazy='joined'), lazy='dynamic')      
 
 # Setup Flask-Security
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
@@ -165,6 +171,15 @@ def farmers_update():
             return json.dumps(obj)
         elif request.method == 'POST':
             items = request.get_json(force=True)
+            for item in items:
+                print "item: " + str(item)
+                print type(item['active'])
+                if type(item['active']) == str or type(item['active']) == unicode:
+                    print item['active']
+                    if item['active'].lower() == 'false':
+                        item['active'] = False
+                    else:
+                        item['active'] = True
             item_ids = []
             for i in items:
                 try: item_ids.append(i['id'])
@@ -235,6 +250,7 @@ admin.add_view(MyModelView(User, db.session))
 admin.add_view(MyModelView(Role, db.session))
 admin.add_view(MyModelView(Item, db.session))
 admin.add_view(MyModelView(Order, db.session))
+admin.add_view(MyModelView(Week, db.session))
 path = op.join(op.dirname(__file__), 'static')
 admin.add_view(MyFileView(path, '/static/', name='Static Files'))
 

@@ -1,10 +1,10 @@
 {% extends "layout.html" %}
 {% block body %}
 <div class="row" id='myitems'>
+  <div data-bind="foreach: status">
+    <div data-bind="alert: $data"></div>
+  </div>
   <div class="form-group col-lg-9 col-md-9 col-sm-9">
-    <div data-bind="foreach: status">
-      <div data-bind="alert: $data"></div>
-    </div>
     <h4>You are logged in as {{ current_user.email }}</h4>
     <table class="table table-striped table-bordered table-condensed">
       <thead><tr>
@@ -20,6 +20,10 @@
         <td><button type="button" class="btn btn-danger btn-xs" data-bind="click: $root.removeItem.bind($data)">X</button></td>
       </tbody>
     </table>
+    <button id="download" type="button" class="btn btn-secondary pull-right">Download</button>
+    <span class="btn btn-file pull-right">
+      <input id="files" type="file" name="files[]" multiple>Upload</input>
+    </span>
     <button id="newitem" type="button" class="btn btn-primary">Add a New Item</button>
     <button id="submititems" type="button" class="btn btn-primary">Update My Items</button>
   </div>

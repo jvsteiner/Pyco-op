@@ -10,6 +10,7 @@ import os.path as op
 import json
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy import asc, desc
+from sqlalchemy.sql.expression import func
 from flask.ext.script import Shell, Manager
 from flask.ext.migrate import Migrate, MigrateCommand
 from flask.ext.security import Security, SQLAlchemyUserDatastore, UserMixin, RoleMixin, LoginForm, \
@@ -94,11 +95,12 @@ class Item(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     active = db.Column(db.Boolean())
     orders = db.relationship('Order', backref=db.backref('item', lazy='joined'), lazy='dynamic')
+    week_id = db.Column(db.Integer, db.ForeignKey('week.id'))
 
     def __str__(self):
         return '<farmer=%s item=%s>' % (self.user.email, self.name)
 
-    def __init__(self, name, description, price, max_available, unit, active, user_id):
+    def __init__(self, name, description, price, max_available, unit, active, user_id, week_id):
         self.name = name
         self.description = description
         self.price = price
@@ -106,6 +108,7 @@ class Item(db.Model):
         self.unit = unit
         self.active = active
         self.user_id = user_id
+        self.week_id = week_id
 
 class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -114,14 +117,15 @@ class Order(db.Model):
     amount = db.Column(db.Float())
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
-    def __init__(self, week, item_id, amount, user_id):
-        self.week = week
+    def __init__(self, week_id, item_id, amount, user_id):
+        self.week_id = week_id
         self.item_id = item_id
         self.amount = amount
         self.user_id = user_id
 
 class Week(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255))
     current = db.Column(db.Boolean())
     active = db.Column(db.Boolean())
     orders = db.relationship('Order', backref=db.backref('week', lazy='joined'), lazy='dynamic')      
@@ -158,40 +162,64 @@ def order():
     else:
         return redirect(url_for_security('login'))
 
+@app.route('/farmers/getold')
+def farmers_old():
+    if current_user.has_role('farmer'):
+        this_week = Week.query.filter(Week.current == True).first()
+        results = Item.query.filter(Item.user == current_user, Item.week_id == (this_week.id - 1)).all()
+        obj = {'old_items': []}
+        for i in range(len(results)):
+            obj['old_items'].append({'name': results[i].name, 'description': results[i].description, 'price': results[i].price, 'max_available': results[i].max_available, 'units': results[i].unit, 'active': results[i].active})
+        # print obj
+        return json.dumps(obj)
+    else:
+        abort(404)
+
 @app.route('/farmers/update', methods=['GET', 'POST'])
 def farmers_update():
     if current_user.has_role('farmer'):
-        results = Item.query.filter(Item.user == current_user).all()
-        # the_item_ids = [i.id for i in results]
+        this_week = Week.query.filter(Week.current == True).first()
+        print vars(this_week)
+        results = Item.query.filter(Item.user == current_user, Item.week_id == this_week.id).all()
+        print results
+        # for i in results: print vars(i)
+        # if not results:
+        #     using_old = True
+        #     print 'using old'
+        #     results = Item.query.filter(Item.user == current_user and Item.week_id == (this_week.id - 1)).all()
+        #     print results
+        # else: using_old = False
         if request.method == 'GET':
             obj = {'old_items': []}
             for i in range(len(results)):
                 obj['old_items'].append({'name': results[i].name, 'description': results[i].description, 'price': results[i].price, 'max_available': results[i].max_available, 'units': results[i].unit, 'active': results[i].active, 'id': results[i].id})
-            print obj
+            # print obj
             return json.dumps(obj)
         elif request.method == 'POST':
             items = request.get_json(force=True)
-            for item in items:
-                print "item: " + str(item)
-                print type(item['active'])
-                if type(item['active']) == str or type(item['active']) == unicode:
-                    print item['active']
-                    if item['active'].lower() == 'false':
-                        item['active'] = False
-                    else:
-                        item['active'] = True
             item_ids = []
-            for i in items:
-                try: item_ids.append(i['id'])
+            for item in items:
+                # print "item: " + str(item)
+                # print type(item['active'])
+                if type(item['active']) == str or type(item['active']) == unicode:
+                    # print item['active']
+                    if item['active'].lower() == 'false': item['active'] = False
+                    else: item['active'] = True
+                # if not using_old:
+                try: item_ids.append(item['id'])
                 except: pass
             for item in items:
-                new = Item(item['name'], item['description'], item['price'], item['max_available'], item['units'], item['active'], current_user.id)
+                new = Item(item['name'], item['description'], item['price'], item['max_available'], item['units'], item['active'], current_user.id, this_week.id)
                 try: new.id = item['id']
                 except: pass
                 db.session.merge(new)
                 db.session.commit()
+            # for i in results: print i.id 
+            # print item_ids
             for item in results:
-                if not item.id in item_ids:
+            #     print item.id
+            #     print item.week_id
+                if not item.id in item_ids and item.week_id == this_week.id:
                     db.session.delete(item)
                     db.session.commit()
             return json.dumps({'message': 'Your Items have been updated', 'priority': 'success'})
@@ -200,12 +228,14 @@ def farmers_update():
 
 @app.route('/order/update', methods=['GET', 'POST'])
 def order_update():
+
     if current_user.has_role('buyer'):
-        the_orders = Order.query.filter(Order.user_id == current_user.id and Order.week == 4).all()
+        this_week = Week.query.filter(Week.current == True).first()
+        the_orders = Order.query.filter(Order.user_id == current_user.id and Order.week == this_week.id).all()
         the_order_ids = [i.id for i in the_orders]
         if request.method == 'GET':
             obj = {'items': [], 'old_orders': []}
-            the_items = Item.query.filter(Item.active == True).order_by(asc(Item.user_id)).all()
+            the_items = Item.query.filter(Item.active == True, Item.week_id == this_week.id).order_by(asc(Item.user_id)).all()
             for i in range(len(the_items)):
                 obj['items'].append({'name': the_items[i].name, 'description': the_items[i].description, 'price': the_items[i].price, 'units': the_items[i].unit, 'available': the_items[i].max_available, 'farmer': the_items[i].user.email, 'id': the_items[i].id})
             for i in range(len(the_orders)):
@@ -220,7 +250,7 @@ def order_update():
                 try: order_ids.append(i['id'])
                 except: pass
             for order in orders:
-                new = Order(4, order['item_id'], order['quantity'], current_user.id)
+                new = Order(this_week.id, order['item_id'], order['quantity'], current_user.id)
                 try: new.id = order['id']
                 except: pass
                 db.session.merge(new)

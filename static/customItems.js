@@ -45,6 +45,28 @@ $(document).ready(function(){
       self.items.remove(item);
     };
 
+    self.getOld = function() {
+      $.getJSON("/farmers/getold", function (data) {
+        console.log(data);
+        ko.mapping.fromJS(data, ivm);
+        // console.log(self.old_items());
+        ko.utils.arrayForEach(self.old_items(), function(old_item) {
+          var the_item = new Item();
+          the_item.name(old_item.name());
+          the_item.description(old_item.description());
+          the_item.units(old_item.units());
+          the_item.max_available(old_item.max_available());
+          the_item.price(old_item.price());
+          the_item.active(old_item.active());
+          ko.utils.arrayPushAll(self.items(), [the_item]);
+          // self.items.push(the_item);
+        });
+        self.items.valueHasMutated();
+        console.log(ko.toJS(self.items));
+        // console.log(self.items());
+      });
+    };
+
     $.getJSON("/farmers/update", function (data) {
       console.log(data);
       ko.mapping.fromJS(data, ivm);
@@ -74,6 +96,10 @@ $(document).ready(function(){
 
     $("button#newitem").live("click", function() {
       self.items.push(new Item())
+    });
+
+    $("button#getold").live("click", function() {
+      self.getOld();
     });
 
     $("button#download").click(function() {

@@ -21,7 +21,6 @@ body {
 .btn-file {
     position: relative;
     overflow: hidden;
-    margin-right: 4px;
     background-color: rgb(192, 192, 192);
 }
 .btn-file input[type=file] {

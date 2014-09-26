@@ -50,6 +50,7 @@ $(document).ready(function(){
         console.log(data);
         ko.mapping.fromJS(data, ivm);
         // console.log(self.old_items());
+        self.items([]);
         ko.utils.arrayForEach(self.old_items(), function(old_item) {
           var the_item = new Item();
           the_item.name(old_item.name());

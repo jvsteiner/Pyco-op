@@ -1,12 +1,12 @@
-# Flask in a Can
+# Pyco-op
 
 1. Clone repo:
 
-    $ git clone git://github.com/jvsteiner/flask-in-a-can.git
+    $ git clone https://github.com/jvsteiner/Pyco-op.git
 
 2. Change directory:
 
-    $ cd flask-in-a-can
+    $ cd pyco-op
 
 3. Install dependencies:
 
@@ -30,7 +30,7 @@
 
     $ python app.py runserver
 
-NOTE: layout.html uses a _scripts.html helper that references several javascript libraries that I like to use:
+NOTE: layout.html uses a _scripts.html helper that references several javascript libraries that are dependancies for the UI:
 
 twitter bootstrap 3.2.0
 
@@ -40,10 +40,11 @@ knockout.js 2.2.1
 
 knockout mapping plugin
 
-The helper is set to use a CDN link when config.PRODUCTION == True, and serve from /static otherwise.  You will need to obtain local copies to work in development mode.
+knockout-bootstrap 0.2.1
 
-This project includes templates for registration, signin, password reset, password change, and user profile
-I based it off mattupstate/flask-security-example, and added some other functionality that I commonly use.  Hope you find it helpful.
+jquery.csv 0.71
+
+The helper is set to use a CDN link when config.PRODUCTION == True, and serve from /static otherwise.  You will need to obtain local copies to work in development mode.
 
 To create an initial user, populate the config/email.py with working smtp details, then signup.
 use the admin interface at localhost:5000/admin to add an admin role, and grant it to your user.

@@ -40,18 +40,15 @@ $(document).ready(function(){
     };
 
     $.getJSON("/order/update", function (data) {
-      // console.log(data);
       ko.mapping.fromJS(data, ovm);
-      // console.log(self.old_orders());
       ko.utils.arrayForEach(self.old_orders(), function(old_order) {
-        var the_order = new Order(old_order.id(), old_order.description(), old_order.units(), old_order.price());
+        var the_order = new Order(old_order.item_id(), old_order.description(), old_order.units(), old_order.price());
         the_order.quantity(old_order.quantity());
         the_order.id = old_order.id();
         ko.utils.arrayPushAll(self.orders(), [the_order]);
         // self.orders.push(the_order);
       });
       self.orders.valueHasMutated();
-      // console.log(self.orders());
     });
 
     $("button#submitorder").live("click", function() {

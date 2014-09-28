@@ -179,16 +179,7 @@ def farmers_old():
 def farmers_update():
     if current_user.has_role('farmer'):
         this_week = Week.query.filter(Week.current == True).first()
-        print vars(this_week)
         results = Item.query.filter(Item.user == current_user, Item.week_id == this_week.id).all()
-        print results
-        # for i in results: print vars(i)
-        # if not results:
-        #     using_old = True
-        #     print 'using old'
-        #     results = Item.query.filter(Item.user == current_user and Item.week_id == (this_week.id - 1)).all()
-        #     print results
-        # else: using_old = False
         if request.method == 'GET':
             obj = {'old_items': []}
             for i in range(len(results)):
@@ -214,11 +205,7 @@ def farmers_update():
                 except: pass
                 db.session.merge(new)
                 db.session.commit()
-            # for i in results: print i.id 
-            # print item_ids
             for item in results:
-            #     print item.id
-            #     print item.week_id
                 if not item.id in item_ids and item.week_id == this_week.id:
                     db.session.delete(item)
                     db.session.commit()
@@ -237,19 +224,24 @@ def order_update():
             obj = {'items': [], 'old_orders': []}
             the_items = Item.query.filter(Item.active == True, Item.week_id == this_week.id).order_by(asc(Item.user_id)).all()
             for i in range(len(the_items)):
-                obj['items'].append({'name': the_items[i].name, 'description': the_items[i].description, 'price': the_items[i].price, 'units': the_items[i].unit, 'available': the_items[i].max_available, 'farmer': the_items[i].user.email, 'id': the_items[i].id})
+                gone = 0
+                for order in the_items[i].orders:
+                    gone += order.amount
+                obj['items'].append({'name': the_items[i].name, 'description': the_items[i].description, 'price': the_items[i].price, 'units': the_items[i].unit, 'available': the_items[i].max_available - gone, 'farmer': the_items[i].user.email, 'id': the_items[i].id})
             for i in range(len(the_orders)):
-                # print (the_orders[i].id)
                 obj['old_orders'].append({'description': the_orders[i].item.description, 'quantity': the_orders[i].amount, 'units': the_orders[i].item.unit, 'price': the_orders[i].item.price, 'id': the_orders[i].id, 'item_id': the_orders[i].item_id})
             return json.dumps(obj)
         elif request.method == 'POST':
             orders = request.get_json(force=True)
-            print orders
             order_ids = []
             for i in orders:
                 try: order_ids.append(i['id'])
                 except: pass
             for order in orders:
+                gone = db.session.query(func.sum(Order.amount)).filter(Order.week_id == this_week.id, Order.item_id == order['item_id']).first()[0]
+                if not gone: gone = 0
+                left = Item.query.get(order['item_id']).max_available - gone
+                order['quantity'] = min(left, order['quantity'])
                 new = Order(this_week.id, order['item_id'], order['quantity'], current_user.id)
                 try: new.id = order['id']
                 except: pass

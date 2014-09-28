@@ -14,10 +14,10 @@ $(document).ready(function(){
       return tot
     }, self);
 
-    function Order(item_id, description, units, price) {
+    function Order(item_id, name, units, price) {
       var self = this;
       self.item_id = item_id;
-      self.description = description;
+      self.name = name;
       self.units = units;
       self.price = price;
       self.quantity = ko.observable(0);
@@ -26,8 +26,8 @@ $(document).ready(function(){
       }, self);
     }
     // Operations
-    self.addOrder = function(item_id, description, units, price) {
-      var theItem = new Order(item_id, description, units, price);
+    self.addOrder = function(item_id, name, units, price) {
+      var theItem = new Order(item_id, name, units, price);
       var match = ko.utils.arrayFirst(self.orders(), function(item) {
         return theItem.item_id === item.item_id;
       });
@@ -42,7 +42,7 @@ $(document).ready(function(){
     $.getJSON("/order/update", function (data) {
       ko.mapping.fromJS(data, ovm);
       ko.utils.arrayForEach(self.old_orders(), function(old_order) {
-        var the_order = new Order(old_order.item_id(), old_order.description(), old_order.units(), old_order.price());
+        var the_order = new Order(old_order.item_id(), old_order.name(), old_order.units(), old_order.price());
         the_order.quantity(old_order.quantity());
         the_order.id = old_order.id();
         ko.utils.arrayPushAll(self.orders(), [the_order]);

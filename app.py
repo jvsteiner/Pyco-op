@@ -229,7 +229,7 @@ def order_update():
                     gone += order.amount
                 obj['items'].append({'name': the_items[i].name, 'description': the_items[i].description, 'price': the_items[i].price, 'units': the_items[i].unit, 'available': the_items[i].max_available - gone, 'farmer': the_items[i].user.email, 'id': the_items[i].id})
             for i in range(len(the_orders)):
-                obj['old_orders'].append({'description': the_orders[i].item.description, 'quantity': the_orders[i].amount, 'units': the_orders[i].item.unit, 'price': the_orders[i].item.price, 'id': the_orders[i].id, 'item_id': the_orders[i].item_id})
+                obj['old_orders'].append({'name': the_orders[i].item.name, 'quantity': the_orders[i].amount, 'units': the_orders[i].item.unit, 'price': the_orders[i].item.price, 'id': the_orders[i].id, 'item_id': the_orders[i].item_id})
             return json.dumps(obj)
         elif request.method == 'POST':
             orders = request.get_json(force=True)

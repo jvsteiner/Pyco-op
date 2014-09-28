@@ -47,7 +47,7 @@ $(document).ready(function(){
 
     self.getOld = function() {
       $.getJSON("/farmers/getold", function (data) {
-        console.log(data);
+        // console.log(data);
         ko.mapping.fromJS(data, ivm);
         // console.log(self.old_items());
         self.items([]);
@@ -63,13 +63,11 @@ $(document).ready(function(){
           // self.items.push(the_item);
         });
         self.items.valueHasMutated();
-        console.log(ko.toJS(self.items));
-        // console.log(self.items());
+        // console.log(ko.toJS(self.items));
       });
     };
 
     $.getJSON("/farmers/update", function (data) {
-      console.log(data);
       ko.mapping.fromJS(data, ivm);
       // console.log(self.old_items());
       ko.utils.arrayForEach(self.old_items(), function(old_item) {
@@ -85,8 +83,7 @@ $(document).ready(function(){
         // self.items.push(the_item);
       });
       self.items.valueHasMutated();
-      console.log(ko.toJS(self.items));
-      // console.log(self.items());
+      // console.log(ko.toJS(self.items));
     });
 
     $("button#submititems").live("click", function() {
@@ -124,7 +121,7 @@ $(document).ready(function(){
       reader.onload = function(event){
         var csv = event.target.result;
         var data = $.csv.toObjects(csv, { onParseValue: $.csv.hooks.castToScalar });  
-        console.log(data);
+        // console.log(data);
         self.items(data);
       };
       reader.onerror = function(){ alert('Unable to read ' + file.fileName); };

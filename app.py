@@ -239,9 +239,14 @@ def order_update():
                 except: pass
             for order in orders:
                 gone = db.session.query(func.sum(Order.amount)).filter(Order.week_id == this_week.id, Order.item_id == order['item_id']).first()[0]
+                if 'id' in order: 
+                    this_quan = Order.query.get(order['id']).amount
+                else: 
+                    this_quan = 0
                 if not gone: gone = 0
-                left = Item.query.get(order['item_id']).max_available - gone
-                order['quantity'] = min(left, order['quantity'])
+                if not this_quan: this_quan = 0
+                left = float(Item.query.get(order['item_id']).max_available) - gone + float(this_quan)
+                order['quantity'] = min(left, float(order['quantity']))
                 new = Order(this_week.id, order['item_id'], order['quantity'], current_user.id)
                 try: new.id = order['id']
                 except: pass

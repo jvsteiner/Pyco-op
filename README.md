@@ -44,7 +44,13 @@ knockout-bootstrap 0.2.1
 
 jquery.csv 0.71
 
-The helper is set to use a CDN link when config.PRODUCTION == True, and serve from /static otherwise.  You will need to obtain local copies to work in development mode.
+colResizable 1.3
+
+The helper is set to use a CDN link when config.PRODUCTION == True, and serve from /static otherwise.  You will need to obtain local copies to work in development mode. You can use:
+
+    $ chmod u+x getjs.sh 
+
+    $ ./getjs.sh
 
 To create an initial user, populate the config/email.py with working smtp details, then signup.
 use the admin interface at localhost:5000/admin to add an admin role, and grant it to your user.

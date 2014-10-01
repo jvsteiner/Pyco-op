@@ -1,48 +1,48 @@
-// your custom javascript goes here
-// 
 $(document).ready(function(){
 
-  function OrderViewModel(config) { //for order viewing
+  function MgmtViewModel(config) { //for order viewing
     var self = this;
     self.orders = ko.observableArray([]);
     self.status = ko.observableArray([]);
+    self.user = ko.observable();
+    self.userorders = ko.observableArray([]);
     self.total = ko.computed(function(){
       var tot=0;
-      ko.utils.arrayForEach(self.orders(), function(order) {
+      ko.utils.arrayForEach(self.userorders(), function(order) {
           tot += order.subtotal();
       });
       return tot
     }, self);
 
-    function Order(item_id, name, units, price) {
+    function Order(item_id, name, units, price, user, user_id) {
       var self = this;
       self.item_id = item_id;
       self.name = name;
       self.units = units;
       self.price = price;
+      self.user = user;
+      self.user_id = user_id;
       self.quantity = ko.observable(0);
       self.subtotal = ko.computed(function() {
         return self.price * self.quantity();
       }, self);
     }
     // Operations
-    self.addOrder = function(item_id, name, units, price) {
-      var theItem = new Order(item_id, name, units, price);
-      var match = ko.utils.arrayFirst(self.orders(), function(item) {
-        return theItem.item_id === item.item_id;
+
+    self.filterOrders = function() {
+      self.userorders.removeAll();
+      ko.utils.arrayForEach(self.orders(), function(order){
+        if (order.user == self.user()) {
+          ko.utils.arrayPushAll(self.userorders(), [order]);
+        }
       });
-      if (!match) {
-        self.orders.push(theItem);
-      };
-    };
-    self.removeOrder = function(item_id) {
-      self.orders.remove(function(item) { return item.item_id === item_id })
+      self.userorders.valueHasMutated();
     };
 
-    $.getJSON("/order/update", function (data) {
-      ko.mapping.fromJS(data, ovm);
+    $.getJSON("/manage/update", function (data) {
+      ko.mapping.fromJS(data, mvm);
       ko.utils.arrayForEach(self.old_orders(), function(old_order) {
-        var the_order = new Order(old_order.item_id(), old_order.name(), old_order.units(), old_order.price());
+        var the_order = new Order(old_order.item_id(), old_order.name(), old_order.units(), old_order.price(), old_order.user(), old_order.user_id());
         the_order.quantity(old_order.quantity());
         the_order.id = old_order.id();
         ko.utils.arrayPushAll(self.orders(), [the_order]);
@@ -52,7 +52,7 @@ $(document).ready(function(){
     });
 
     $("button#submitorder").live("click", function() {
-      $.post("/order/update", ko.toJSON(self.orders()), function(returnedData) {
+      $.post("/manage/update", ko.toJSON(self.userorders()), function(returnedData) {
         self.status([JSON.parse(returnedData)]);
       })
     });
@@ -72,14 +72,8 @@ $(document).ready(function(){
     }
   };
 
-  var ovm = new OrderViewModel({'items': [], 'orders': []});
-  ko.applyBindings(ovm,$("#myorders")[0]);
-
-  // var ovm = new OrderViewModel();
-
-  $("button#submititems").live("click", function() {
-    // ws.send(JSON.stringify({'action': {'type': 'LOGIN', 'userid': self.username(), 'password': 'test12'}}));
-  });
+  var mvm = new MgmtViewModel({'buyers': [], 'orders': []});
+  ko.applyBindings(mvm,$("#mgmt")[0]);
 
   $("#test").colResizable({
     liveDrag:true, 
@@ -106,17 +100,3 @@ $(document).ready(function(){
   }
   
 });
-/*
-JSON SAMPLE = {
-  'order': [{
-    'farmer': 'farmername',
-    'items': [{
-      'name': 'itemname',
-      'description': 'itemdescription',
-      'price': 'itemprice',
-      'quantity_per_unit': 'itemquantity_per_unit',
-      'units': 'units sold in (ie. 100g)',
-      'available': 'items_available'
-    }, {more_items...}]
-  }, {more_farmers...}]
-}*/

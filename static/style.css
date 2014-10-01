@@ -1,4 +1,10 @@
 /* your custom css goes here - the styling below handles the footer*/
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 400;
+  src: url(http://fonts.gstatic.com/s/opensans/v10/u-WUoqrET9fUeobQW7jkRZBw1xU1rKptJj_0jans920.woff2) format('woff2');
+}
 html {
   position: relative;
   min-height: 100%;
@@ -46,7 +52,10 @@ body {
   width: 100%;
   border: none;
   background: none;
-  padding-left: 4px;
+}
+.table#test>tbody>tr>td {
+  padding-left: 4px !important;
+  padding-right: 4px !important;
 }
 .table#test>tbody>tr>td.center, .table#test>tbody>tr>td.center>input {
   text-align: center;

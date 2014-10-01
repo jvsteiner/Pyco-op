@@ -2,6 +2,7 @@
 from flask import Flask, flash, render_template, request, session, redirect, url_for, abort
 from flask.ext.babel import Babel
 from flask.ext.mail import Mail
+from flask.ext.mail import Message
 from flask.ext.bcrypt import *
 from flask.ext.admin import Admin, BaseView, expose
 from flask.ext.admin.contrib.sqla import ModelView
@@ -10,7 +11,7 @@ import os.path as op
 import json
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy import asc, desc
-from sqlalchemy.sql.expression import func
+from sqlalchemy.sql.expression import func, distinct
 from flask.ext.script import Shell, Manager
 from flask.ext.migrate import Migrate, MigrateCommand
 from flask.ext.security import Security, SQLAlchemyUserDatastore, UserMixin, RoleMixin, LoginForm, \
@@ -51,6 +52,12 @@ def get_locale():
 def inject_userForms():
     return dict(login_form=LoginForm(), register_user_form=RegisterForm(), \
         forgot_password_form=ForgotPasswordForm(), change_password_form=ChangePasswordForm())
+
+@app.before_request
+def check_for_admin(*args, **kw):
+    if request.path.startswith('/admin/'):
+        if not current_user.has_role('admin'):
+            abort(404)
 
 # Create database connection object
 def _make_context():
@@ -215,7 +222,6 @@ def farmers_update():
 
 @app.route('/order/update', methods=['GET', 'POST'])
 def order_update():
-
     if current_user.has_role('buyer'):
         this_week = Week.query.filter(Week.current == True).first()
         the_orders = Order.query.filter(Order.user_id == current_user.id and Order.week == this_week.id).all()
@@ -256,7 +262,47 @@ def order_update():
                 if not order.id in order_ids:
                     db.session.delete(order)
                     db.session.commit()
-            return json.dumps({'message': 'Your Order has been placed', 'priority': 'success'})
+            response = {'message': 'Your Order has been placed', 'priority': 'success', 'items': []}
+            # the_items = Item.query.filter(Item.active == True, Item.week_id == this_week.id).order_by(asc(Item.user_id)).all()
+            # for i in range(len(response)):
+            #     response['items'].append({'name': response[i].name, 'description': response[i].description, 'price': response[i].price, 'units': response[i].unit, 'available': response[i].max_available - gone, 'farmer': response[i].user.email, 'id': response[i].id})
+            # msg = Message("Hello", sender="from@example.com", recipients=["jvsteiner@gmail.com"])
+            # mail.send(msg)
+            return json.dumps(response)
+    else:
+        abort(404)
+
+@app.route('/manage')
+def manage():
+    if current_user.is_authenticated():
+        return render_template('manage.html')
+
+@app.route('/manage/update', methods=['GET', 'POST'])
+def manage_update():
+    if current_user.has_role('manager'):
+        this_week = Week.query.filter(Week.current == True).first()
+        the_orders = Order.query.filter(Order.week == this_week).all()
+        the_order_ids = [i.id for i in the_orders]
+        if request.method == 'GET':
+            obj = {'buyers': [], 'old_orders': []}
+            obj['buyers'] = [i.email for i in User.query.all() if i.has_role('buyer')]
+            for i in range(len(the_orders)):
+                obj['old_orders'].append({'name': the_orders[i].item.name, 'quantity': the_orders[i].amount, 'units': the_orders[i].item.unit, 'price': the_orders[i].item.price, 'id': the_orders[i].id, 'item_id': the_orders[i].item_id, 'user': the_orders[i].user.email, 'user_id': the_orders[i].user.id})
+            return json.dumps(obj)
+        elif request.method == 'POST':
+            orders = request.get_json(force=True)
+            order_ids = []
+            for i in orders:
+                try: order_ids.append(i['id'])
+                except: pass
+            for order in orders:
+                this_quan = Order.query.get(order['id']).amount
+                new = Order(this_week.id, order['item_id'], order['quantity'], current_user.id)
+                new.id = order['id']
+                db.session.merge(new)
+                db.session.commit()
+            response = {'message': 'Your Order has been placed', 'priority': 'success', 'items': []}
+            return json.dumps(response)
     else:
         abort(404)
 

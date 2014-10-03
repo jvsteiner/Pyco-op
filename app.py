@@ -5,6 +5,7 @@ from flask.ext.mail import Mail
 from flask.ext.mail import Message
 from flask.ext.bcrypt import *
 from flask.ext.admin import Admin, BaseView, expose
+from flask.ext.admin.base import MenuLink
 from flask.ext.admin.contrib.sqla import ModelView
 from flask.ext.admin.contrib.fileadmin import FileAdmin
 import os.path as op
@@ -12,7 +13,7 @@ import json
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy import asc, desc
 from sqlalchemy.sql.expression import func, distinct
-from flask.ext.script import Shell, Manager
+from flask.ext.script import Shell, Manager, Command, Option
 from flask.ext.migrate import Migrate, MigrateCommand
 from flask.ext.security import Security, SQLAlchemyUserDatastore, UserMixin, RoleMixin, LoginForm, \
         RegisterForm, ForgotPasswordForm, current_user, login_required, url_for_security
@@ -65,8 +66,14 @@ def _make_context():
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 manager = Manager(app)
+
+# @manager.command
+# def hello(name="Fred"):
+#     print "hello", name
+
 manager.add_command('db', MigrateCommand)
 manager.add_command("shell", Shell(make_context=_make_context))
+# manager.add_command('hello', hello())
 
 # Define models
 roles_users = db.Table('roles_users',
@@ -319,13 +326,14 @@ class MyFileView(FileAdmin):
         return True  # remove
         # return current_user.has_role('admin')  # uncomment to lock down admin
 
-admin.add_view(MyModelView(User, db.session))
-admin.add_view(MyModelView(Role, db.session))
-admin.add_view(MyModelView(Item, db.session))
-admin.add_view(MyModelView(Order, db.session))
-admin.add_view(MyModelView(Week, db.session))
+admin.add_view(MyModelView(User, db.session, name='Users', category='Models'))
+admin.add_view(MyModelView(Role, db.session, name='Roles', category='Models'))
+admin.add_view(MyModelView(Item, db.session, name='Items', category='Models'))
+admin.add_view(MyModelView(Order, db.session, name='Orders', category='Models'))
+admin.add_view(MyModelView(Week, db.session, name='Weeks', category='Models'))
 path = op.join(op.dirname(__file__), 'static')
 admin.add_view(MyFileView(path, '/static/', name='Static Files'))
+admin.add_link(MenuLink(name='Main Site', url='/'))
 
 if __name__ == '__main__':
     manager.run()

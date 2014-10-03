@@ -304,11 +304,11 @@ def manage_update():
                 except: pass
             for order in orders:
                 this_quan = Order.query.get(order['id']).amount
-                new = Order(this_week.id, order['item_id'], order['quantity'], current_user.id)
+                new = Order(this_week.id, order['item_id'], order['quantity'], order['user_id'])
                 new.id = order['id']
                 db.session.merge(new)
                 db.session.commit()
-            response = {'message': 'Your Order has been placed', 'priority': 'success', 'items': []}
+            response = {'message': str(orders[0]['user']) + '\'s order has been updated', 'priority': 'success', 'items': []}
             return json.dumps(response)
     else:
         abort(404)

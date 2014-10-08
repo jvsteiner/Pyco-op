@@ -1,4 +1,6 @@
-
+# from flask.ext.security import utils
+# import patches
+# utils.send_mail = patches.my_send_mail
 from flask import Flask, flash, render_template, request, session, redirect, url_for, abort
 from flask.ext.babel import Babel
 from flask.ext.mail import Mail
@@ -10,6 +12,7 @@ from flask.ext.admin.contrib.sqla import ModelView
 from flask.ext.admin.contrib.fileadmin import FileAdmin
 import os.path as op
 import json
+from decorators import async
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy import asc, desc
 from sqlalchemy.sql.expression import func, distinct
@@ -18,6 +21,7 @@ from flask.ext.migrate import Migrate, MigrateCommand
 from flask.ext.security import Security, SQLAlchemyUserDatastore, UserMixin, RoleMixin, LoginForm, \
         RegisterForm, ForgotPasswordForm, current_user, login_required, url_for_security
 from flask.ext.security.forms import ChangePasswordForm
+
 
 # Create app
 app = Flask(__name__)
@@ -148,7 +152,14 @@ class Week(db.Model):
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
 
-# db.create_all()
+@async
+def send_security_email(msg):
+    with app.app_context():
+       mail.send(msg)
+
+@security.send_mail_task
+def async_security_email(msg):
+    send_security_email(msg)
 
 # Views
 @app.route('/')
@@ -176,6 +187,11 @@ def order():
     else:
         return redirect(url_for_security('login'))
 
+@app.route('/manage')
+def manage():
+    if current_user.is_authenticated():
+        return render_template('manage.html')
+        
 @app.route('/farmers/getold')
 def farmers_old():
     if current_user.has_role('farmer'):
@@ -184,7 +200,6 @@ def farmers_old():
         obj = {'old_items': []}
         for i in range(len(results)):
             obj['old_items'].append({'name': results[i].name, 'description': results[i].description, 'price': results[i].price, 'max_available': results[i].max_available, 'units': results[i].unit, 'active': results[i].active})
-        # print obj
         return json.dumps(obj)
     else:
         abort(404)
@@ -198,19 +213,14 @@ def farmers_update():
             obj = {'old_items': []}
             for i in range(len(results)):
                 obj['old_items'].append({'name': results[i].name, 'description': results[i].description, 'price': results[i].price, 'max_available': results[i].max_available, 'units': results[i].unit, 'active': results[i].active, 'id': results[i].id})
-            # print obj
             return json.dumps(obj)
         elif request.method == 'POST':
             items = request.get_json(force=True)
             item_ids = []
             for item in items:
-                # print "item: " + str(item)
-                # print type(item['active'])
                 if type(item['active']) == str or type(item['active']) == unicode:
-                    # print item['active']
                     if item['active'].lower() == 'false': item['active'] = False
                     else: item['active'] = True
-                # if not using_old:
                 try: item_ids.append(item['id'])
                 except: pass
             for item in items:
@@ -270,19 +280,9 @@ def order_update():
                     db.session.delete(order)
                     db.session.commit()
             response = {'message': 'Your Order has been placed', 'priority': 'success', 'items': []}
-            # the_items = Item.query.filter(Item.active == True, Item.week_id == this_week.id).order_by(asc(Item.user_id)).all()
-            # for i in range(len(response)):
-            #     response['items'].append({'name': response[i].name, 'description': response[i].description, 'price': response[i].price, 'units': response[i].unit, 'available': response[i].max_available - gone, 'farmer': response[i].user.email, 'id': response[i].id})
-            # msg = Message("Hello", sender="from@example.com", recipients=["jvsteiner@gmail.com"])
-            # mail.send(msg)
             return json.dumps(response)
     else:
         abort(404)
-
-@app.route('/manage')
-def manage():
-    if current_user.is_authenticated():
-        return render_template('manage.html')
 
 @app.route('/manage/update', methods=['GET', 'POST'])
 def manage_update():

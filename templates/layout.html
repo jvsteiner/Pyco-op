@@ -22,8 +22,6 @@
 			</button>
 			<a class="navbar-brand" href="{{ url_for('index') }}">PyCo-op</a>
 		</div>
-
-		<!-- Collect the nav links, forms, and other content for toggling -->
 		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 			<ul class="nav navbar-nav">
 				{% if current_user.has_role('buyer') %}
@@ -32,7 +30,7 @@
 				{% if current_user.has_role('farmer') %}
 				<li {% if request.path == '/farmers' %} class='active' {% endif %}><a href="{{ url_for('farmers') }}">Farmers</a></li>
 				{% endif %}
-				{% if current_user.has_role('farmer') %}
+				{% if current_user.has_role('manager') %}
 				<li {% if request.path == '/manage' %} class='active' {% endif %}><a href="{{ url_for('manage') }}">Manage</a></li>
 				{% endif %}
 				{% if current_user.has_role('admin') %}
@@ -48,8 +46,8 @@
 				<li><a href="{{ url_for('security.register') }}">Sign Up</a></li>
 				{% endif %}
 			</ul>
-		</div><!-- /.navbar-collapse -->
-	</div><!-- /.container-fluid -->
+		</div>
+	</div>
 </nav>
 <div class="page">
 	<div class="container">

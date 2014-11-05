@@ -1,12 +1,7 @@
 *.pyc
-!config/__init__.py
-!config/*.example
 venv/
-static/*
-config/*
-!static/custom*.js
-!static/style.css
-env/*
+static/
+env/
 !env/*.example
 !env/__init__.py
 .DS_Store

@@ -20,7 +20,7 @@ from sqlalchemy.sql.expression import func, distinct
 from flask.ext.script import Shell, Manager, Command, Option
 from flask.ext.migrate import Migrate, MigrateCommand
 from flask.ext.security import Security, SQLAlchemyUserDatastore, UserMixin, RoleMixin, LoginForm, \
-        RegisterForm, ForgotPasswordForm, current_user, login_required, url_for_security
+        RegisterForm, ForgotPasswordForm, current_user, login_required, url_for_security, roles_required
 from flask.ext.security.forms import ChangePasswordForm
 
 
@@ -174,153 +174,146 @@ def index():
     return render_template('index.html')
 
 @app.route('/profile')
+@login_required
 def profile():
-    if current_user.is_authenticated():
-        return render_template('profile.html')
-    else:
-        return redirect(url_for_security('login'))
+    return render_template('profile.html')
         
 @app.route('/farmers')
+@login_required
+@roles_required('farmer')
 def farmers():
-    if current_user.has_role('farmer'):
-        return render_template('farmers.html')
-    else:
-        return redirect(url_for_security('login'))
+    return render_template('farmers.html')
 
 @app.route('/order')
+@login_required
+@roles_required('buyer')
 def order():
-    if current_user.has_role('buyer'):
-        return render_template('order.html')
-    else:
-        return redirect(url_for_security('login'))
+    return render_template('order.html')
 
 @app.route('/manage')
+@login_required
+@roles_required('manager')
 def manage():
-    if current_user.is_authenticated():
-        return render_template('manage.html')
+    return render_template('manage.html')
         
 @app.route('/farmers/getold')
+@login_required
+@roles_required('farmer')
 def farmers_old():
-    if current_user.has_role('farmer'):
-        this_week = Week.query.filter(Week.current == True).first()
-        results = Item.query.filter(Item.user == current_user, Item.week_id == (this_week.id - 1)).all()
-        obj = {'old_items': []}
-        for i in range(len(results)):
-            obj['old_items'].append({'name': results[i].name, 'description': results[i].description, 'price': results[i].price, 'max_available': results[i].max_available, 'units': results[i].unit, 'active': results[i].active})
-        return json.dumps(obj)
-    else:
-        abort(404)
+    this_week = Week.query.filter(Week.current == True).first()
+    results = Item.query.filter(Item.user == current_user, Item.week_id == (this_week.id - 1)).all()
+    obj = {'old_items': []}
+    for i in range(len(results)):
+        obj['old_items'].append({'name': results[i].name, 'description': results[i].description, 'price': results[i].price, 'max_available': results[i].max_available, 'units': results[i].unit, 'active': results[i].active})
+    return json.dumps(obj)
 
 @app.route('/farmers/update', methods=['GET', 'POST'])
+@login_required
+@roles_required('farmer')
 def farmers_update():
-    if current_user.has_role('farmer'):
-        this_week = Week.query.filter(Week.current == True).first()
-        results = Item.query.filter(Item.user == current_user, Item.week_id == this_week.id).all()
-        if request.method == 'GET':
-            obj = {'old_items': []}
-            for i in range(len(results)):
-                obj['old_items'].append({'name': results[i].name, 'description': results[i].description, 'price': results[i].price, 'max_available': results[i].max_available, 'units': results[i].unit, 'active': results[i].active, 'id': results[i].id})
-            return json.dumps(obj)
-        elif request.method == 'POST':
-            items = request.get_json(force=True)
-            item_ids = []
-            for item in items:
-                if type(item['active']) == str or type(item['active']) == unicode:
-                    if item['active'].lower() == 'false': item['active'] = False
-                    else: item['active'] = True
-                try: item_ids.append(item['id'])
-                except: pass
-            for item in items:
-                new = Item(item['name'], item['description'], item['price'], item['max_available'], item['units'], item['active'], current_user.id, this_week.id)
-                try: new.id = item['id']
-                except: pass
-                db.session.merge(new)
+    this_week = Week.query.filter(Week.current == True).first()
+    results = Item.query.filter(Item.user == current_user, Item.week_id == this_week.id).all()
+    if request.method == 'GET':
+        obj = {'old_items': []}
+        for i in range(len(results)):
+            obj['old_items'].append({'name': results[i].name, 'description': results[i].description, 'price': results[i].price, 'max_available': results[i].max_available, 'units': results[i].unit, 'active': results[i].active, 'id': results[i].id})
+        return json.dumps(obj)
+    elif request.method == 'POST':
+        items = request.get_json(force=True)
+        item_ids = []
+        for item in items:
+            if type(item['active']) == str or type(item['active']) == unicode:
+                if item['active'].lower() == 'false': item['active'] = False
+                else: item['active'] = True
+            try: item_ids.append(item['id'])
+            except: pass
+        for item in items:
+            new = Item(item['name'], item['description'], item['price'], item['max_available'], item['units'], item['active'], current_user.id, this_week.id)
+            try: new.id = item['id']
+            except: pass
+            db.session.merge(new)
+            db.session.commit()
+        for item in results:
+            if not item.id in item_ids and item.week_id == this_week.id:
+                db.session.delete(item)
                 db.session.commit()
-            for item in results:
-                if not item.id in item_ids and item.week_id == this_week.id:
-                    db.session.delete(item)
-                    db.session.commit()
-            return json.dumps({'message': 'Your Items have been updated', 'priority': 'success'})
-    else:
-        abort(404)
+        return json.dumps({'message': 'Your Items have been updated', 'priority': 'success'})
 
 @app.route('/order/update', methods=['GET', 'POST'])
+@login_required
+@roles_required('buyer')
 def order_update():
-    if current_user.has_role('buyer'):
-        this_week = Week.query.filter(Week.current == True).first()
-        the_orders = Order.query.filter(Order.user_id == current_user.id and Order.week == this_week.id).all()
-        the_order_ids = [i.id for i in the_orders]
-        if request.method == 'GET':
-            obj = {'items': [], 'old_orders': []}
-            the_items = Item.query.filter(Item.active == True, Item.week_id == this_week.id).order_by(asc(Item.user_id)).all()
-            for i in range(len(the_items)):
+    this_week = Week.query.filter(Week.current == True).first()
+    the_orders = Order.query.filter(Order.user_id == current_user.id and Order.week == this_week.id).all()
+    the_order_ids = [i.id for i in the_orders]
+    if request.method == 'GET':
+        obj = {'items': [], 'old_orders': []}
+        the_items = Item.query.filter(Item.active == True, Item.week_id == this_week.id).order_by(asc(Item.user_id)).all()
+        for i in range(len(the_items)):
+            gone = 0
+            for order in the_items[i].orders:
+                gone += order.amount
+            obj['items'].append({'name': the_items[i].name, 'description': the_items[i].description, 'price': the_items[i].price, 'units': the_items[i].unit, 'available': the_items[i].max_available - gone, 'farmer': the_items[i].user.email, 'id': the_items[i].id})
+        for i in range(len(the_orders)):
+            obj['old_orders'].append({'name': the_orders[i].item.name, 'quantity': the_orders[i].amount, 'units': the_orders[i].item.unit, 'price': the_orders[i].item.price, 'id': the_orders[i].id, 'item_id': the_orders[i].item_id})
+        return json.dumps(obj)
+    elif request.method == 'POST':
+        orders = request.get_json(force=True)
+        order_ids = []
+        for i in orders:
+            try: order_ids.append(i['id'])
+            except: pass
+        for order in orders:
+            gone = db.session.query(func.sum(Order.amount)).filter(Order.week_id == this_week.id, Order.item_id == order['item_id']).first()[0]
+            if 'id' in order: 
+                this_quan = Order.query.get(order['id']).amount
+            else: 
+                this_quan = 0
+            if not gone:
                 gone = 0
-                for order in the_items[i].orders:
-                    gone += order.amount
-                obj['items'].append({'name': the_items[i].name, 'description': the_items[i].description, 'price': the_items[i].price, 'units': the_items[i].unit, 'available': the_items[i].max_available - gone, 'farmer': the_items[i].user.email, 'id': the_items[i].id})
-            for i in range(len(the_orders)):
-                obj['old_orders'].append({'name': the_orders[i].item.name, 'quantity': the_orders[i].amount, 'units': the_orders[i].item.unit, 'price': the_orders[i].item.price, 'id': the_orders[i].id, 'item_id': the_orders[i].item_id})
-            return json.dumps(obj)
-        elif request.method == 'POST':
-            orders = request.get_json(force=True)
-            order_ids = []
-            for i in orders:
-                try: order_ids.append(i['id'])
-                except: pass
-            for order in orders:
-                gone = db.session.query(func.sum(Order.amount)).filter(Order.week_id == this_week.id, Order.item_id == order['item_id']).first()[0]
-                if 'id' in order: 
-                    this_quan = Order.query.get(order['id']).amount
-                else: 
-                    this_quan = 0
-                if not gone:
-                    gone = 0
-                if not this_quan:
-                    this_quan = 0
-                left = float(Item.query.get(order['item_id']).max_available) - gone + float(this_quan)
-                order['quantity'] = min(left, float(order['quantity']))
-                new = Order(this_week.id, order['item_id'], order['quantity'], current_user.id)
-                try: new.id = order['id']
-                except: pass
-                db.session.merge(new)
+            if not this_quan:
+                this_quan = 0
+            left = float(Item.query.get(order['item_id']).max_available) - gone + float(this_quan)
+            order['quantity'] = min(left, float(order['quantity']))
+            new = Order(this_week.id, order['item_id'], order['quantity'], current_user.id)
+            try: new.id = order['id']
+            except: pass
+            db.session.merge(new)
+            db.session.commit()
+        for order in the_orders:
+            if not order.id in order_ids:
+                db.session.delete(order)
                 db.session.commit()
-            for order in the_orders:
-                if not order.id in order_ids:
-                    db.session.delete(order)
-                    db.session.commit()
-            response = {'message': 'Your Order has been placed', 'priority': 'success', 'items': []}
-            return json.dumps(response)
-    else:
-        abort(404)
+        response = {'message': 'Your Order has been placed', 'priority': 'success', 'items': []}
+        return json.dumps(response)
 
 @app.route('/manage/update', methods=['GET', 'POST'])
+@login_required
+@roles_required('manager')
 def manage_update():
-    if current_user.has_role('manager'):
-        this_week = Week.query.filter(Week.current == True).first()
-        the_orders = Order.query.filter(Order.week == this_week).all()
-        the_order_ids = [i.id for i in the_orders]
-        if request.method == 'GET':
-            obj = {'buyers': [], 'old_orders': []}
-            obj['buyers'] = [i.email for i in User.query.all() if i.has_role('buyer')]
-            for i in range(len(the_orders)):
-                obj['old_orders'].append({'name': the_orders[i].item.name, 'quantity': the_orders[i].amount, 'units': the_orders[i].item.unit, 'price': the_orders[i].item.price, 'id': the_orders[i].id, 'item_id': the_orders[i].item_id, 'user': the_orders[i].user.email, 'user_id': the_orders[i].user.id})
-            return json.dumps(obj)
-        elif request.method == 'POST':
-            orders = request.get_json(force=True)
-            order_ids = []
-            for i in orders:
-                try: order_ids.append(i['id'])
-                except: pass
-            for order in orders:
-                this_quan = Order.query.get(order['id']).amount
-                new = Order(this_week.id, order['item_id'], order['quantity'], order['user_id'])
-                new.id = order['id']
-                db.session.merge(new)
-                db.session.commit()
-            response = {'message': str(orders[0]['user']) + '\'s order has been updated', 'priority': 'success', 'items': []}
-            return json.dumps(response)
-    else:
-        abort(404)
+    this_week = Week.query.filter(Week.current == True).first()
+    the_orders = Order.query.filter(Order.week == this_week).all()
+    the_order_ids = [i.id for i in the_orders]
+    if request.method == 'GET':
+        obj = {'buyers': [], 'old_orders': []}
+        obj['buyers'] = [i.email for i in User.query.all() if i.has_role('buyer')]
+        for i in range(len(the_orders)):
+            obj['old_orders'].append({'name': the_orders[i].item.name, 'quantity': the_orders[i].amount, 'units': the_orders[i].item.unit, 'price': the_orders[i].item.price, 'id': the_orders[i].id, 'item_id': the_orders[i].item_id, 'user': the_orders[i].user.email, 'user_id': the_orders[i].user.id})
+        return json.dumps(obj)
+    elif request.method == 'POST':
+        orders = request.get_json(force=True)
+        order_ids = []
+        for i in orders:
+            try: order_ids.append(i['id'])
+            except: pass
+        for order in orders:
+            this_quan = Order.query.get(order['id']).amount
+            new = Order(this_week.id, order['item_id'], order['quantity'], order['user_id'])
+            new.id = order['id']
+            db.session.merge(new)
+            db.session.commit()
+        response = {'message': str(orders[0]['user']) + '\'s order has been updated', 'priority': 'success', 'items': []}
+        return json.dumps(response)
 
 admin = Admin(app)
 

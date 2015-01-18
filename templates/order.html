@@ -28,7 +28,7 @@
   <div class="form-group col-lg-6 col-md-6 col-sm-6">
 
     <h4>Your Order:</h4>
-    <table class="table table-striped table-bordered table-condensed" id="test">
+    <table class="table table-striped table-bordered table-condensed resizable">
       <thead>
         <tr><th style="width: 30%;">Item Name</th><th style="width: 25%;">Order Amount</th style="width: 10%;"><th>Units</th><th style="width: 15%;">Price ea.</th><th style="width: 13%;">Subtotal</th><th style="width: 7%;">Del</th></tr>
       </thead>
@@ -47,6 +47,8 @@
 </div>
 <body>
   {% include "_scripts.html" %}
-  <script src="{{ url_for('custom', filename='customOrders.js') }}"></script>
+  {% assets "jsOrders" %}
+    <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+  {% endassets %}
 </body>
 {% endblock %}

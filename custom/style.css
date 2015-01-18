@@ -48,19 +48,19 @@ body {
     display: block;
 }
 
-.table#test>thead>tr>th {
+.table.resizable>thead>tr>th {
   text-align: center;
 }
-.table#test>tbody>tr>td>input {
+.table.resizable>tbody>tr>td>input {
   width: 100%;
   border: none;
   background: none;
 }
-.table#test>tbody>tr>td {
+.table.resizable>tbody>tr>td {
   padding-left: 4px !important;
   padding-right: 4px !important;
 }
-.table#test>tbody>tr>td.center, .table#test>tbody>tr>td.center>input {
+.table.resizable>tbody>tr>td.center, .table.resizable>tbody>tr>td.center>input {
   text-align: center;
   width: inherit;
 }

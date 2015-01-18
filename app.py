@@ -1,7 +1,7 @@
 # from flask.ext.security import utils
 # import patches
 # utils.send_mail = patches.my_send_mail
-from flask import Flask, flash, render_template, request, session, redirect, url_for, abort, send_from_directory
+from flask import Flask, flash, render_template, request, session, redirect, url_for, abort, send_from_directory, Blueprint
 from flask.ext.babel import Babel
 from flask.ext.mail import Mail
 from flask.ext.mail import Message
@@ -10,6 +10,7 @@ from flask.ext.admin import Admin, BaseView, expose
 from flask.ext.admin.base import MenuLink
 from flask.ext.admin.contrib.sqla import ModelView
 from flask.ext.admin.contrib.fileadmin import FileAdmin
+from flask.ext.assets import Environment, Bundle
 import os.path as op
 import json
 from decorators import async
@@ -28,7 +29,17 @@ app = Flask(__name__)
 app.config.from_object('config.config')
 app.config.from_object('env.env') #overwrites config.config for production server
 app.config.from_object('env.email') #overwrites config.config for production server
-install_dir = op.split(op.realpath(__file__))[0]
+custom = Blueprint('custom', __name__, static_folder='custom',  static_url_path='/custom')
+app.register_blueprint(custom)
+assets = Environment(app)
+jsItems = Bundle('custom/customItems.js', 'custom/customAll.js', filters='jsmin', output='gen/items.js')
+jsMgmt = Bundle('custom/customMgmt.js', 'custom/customAll.js', filters='jsmin', output='gen/mgmt.js')
+jsOrders = Bundle('custom/customOrders.js', 'custom/customAll.js', filters='jsmin', output='gen/orders.js')
+css = Bundle('custom/style.css', filters='cssmin', output='gen/packed.css')
+assets.register('jsItems', jsItems)
+assets.register('jsMgmt', jsMgmt)
+assets.register('jsOrders', jsOrders)
+assets.register('css_all', css)
 
 # Setup mail extension
 mail = Mail(app)
@@ -72,13 +83,8 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 manager = Manager(app)
 
-# @manager.command
-# def hello(name="Fred"):
-#     print "hello", name
-
 manager.add_command('db', MigrateCommand)
 manager.add_command("shell", Shell(make_context=_make_context))
-# manager.add_command('hello', hello())
 
 # Define models
 roles_users = db.Table('roles_users',
@@ -166,10 +172,6 @@ def async_security_email(msg):
 @app.route('/')
 def index():
     return render_template('index.html')
-
-@app.route('/custom/<path:filename>')
-def custom(filename):
-    return send_from_directory(op.join(install_dir, app.config['CUSTOM_STATIC_PATH']), filename)
 
 @app.route('/profile')
 def profile():
@@ -271,8 +273,10 @@ def order_update():
                     this_quan = Order.query.get(order['id']).amount
                 else: 
                     this_quan = 0
-                if not gone: gone = 0
-                if not this_quan: this_quan = 0
+                if not gone:
+                    gone = 0
+                if not this_quan:
+                    this_quan = 0
                 left = float(Item.query.get(order['item_id']).max_available) - gone + float(this_quan)
                 order['quantity'] = min(left, float(order['quantity']))
                 new = Order(this_week.id, order['item_id'], order['quantity'], current_user.id)

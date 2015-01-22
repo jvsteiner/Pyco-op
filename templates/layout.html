@@ -8,7 +8,7 @@
 		<link href="{{ url_for('static', filename='bootstrap.min.css') }}" rel="stylesheet">
 	{% endif %}
 	{% assets "css_all" %}
-		<link rel="stylesheet" href="{{ ASSET_URL }}">
+		<link href="{{ ASSET_URL }}" rel="stylesheet">
 	{% endassets %}
   <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
 </head>
@@ -22,7 +22,7 @@
 				<span class="icon-bar"></span>
 				<span class="icon-bar"></span>
 			</button>
-			<a class="navbar-brand" href="{{ url_for('index') }}">PyCo-op</a>
+			<a class="navbar-brand" href="{{ url_for('index') }}"><img src="{{ url_for('custom.static', filename='logo.png') }}"></a>
 		</div>
 		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 			<ul class="nav navbar-nav">

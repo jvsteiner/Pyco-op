@@ -62,6 +62,17 @@ input:focus, select:focus, textarea:focus, button:focus {
   background: none;
   text-align: center;
 }
+.rangeGrip {
+  background-color: #ddd;
+  height: 10px;
+  width: 10px;
+  margin-top: 20px;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+}
+.rangeDrag .rangeGrip {
+  background-color: #6b6b6b;
+}
 .table.resizable>tbody>tr>td {
   padding-left: 4px !important;
   padding-right: 4px !important;

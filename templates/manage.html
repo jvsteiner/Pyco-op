@@ -14,7 +14,7 @@
       </thead>
       <tbody data-bind="foreach: userorders ">
         <td data-bind="text: $data.name"></td>
-        <td><input data-bind="value: $data.quantity"></input></td>
+        <td><input onClick="this.select();" data-bind="value: $data.quantity"></input></td>
         <td data-bind="text: $data.units"></td>
         <td data-bind="currency: $data.price, symbol: '€'"></td>
         <td data-bind="currency: $data.subtotal, symbol: '€'"></td>

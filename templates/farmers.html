@@ -11,11 +11,11 @@
         <th style="width: 15%;">Name</th><th style="width: 48%;">Description</th><th style="width: 7%;">Units</th><th style="width: 7%;">In Stock</th><th style="width: 10%;">Price/Unit (€)</th><th style="width: 7%;">Available</th><th style="width: 7%;">Remove</th>
       </tr></thead>
       <tbody data-bind="foreach: items">
-        <td><input data-bind="value: $data.name"></input></td>
-        <td><input data-bind="value: $data.description"></input></td>
-        <td><input data-bind="value: $data.units"></input></td>
-        <td><input data-bind="value: $data.max_available"></input></td>
-        <td><input data-bind="value: $data.price"></input></td>
+        <td><input onClick="this.select();" data-bind="value: $data.name"></input></td>
+        <td><input onClick="this.select();" data-bind="value: $data.description"></input></td>
+        <td><input onClick="this.select();" data-bind="value: $data.units"></input></td>
+        <td><input onClick="this.select();" data-bind="value: $data.max_available"></input></td>
+        <td><input onClick="this.select();" data-bind="value: $data.price"></input></td>
         <td class="center"><input type="checkbox" data-bind="checked: $data.active"></input></td>
         <td class="center"><button type="button" class="btn btn-danger btn-xs" data-bind="click: $root.removeItem.bind($data)">X</button></td>
       </tbody>

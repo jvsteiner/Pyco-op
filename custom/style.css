@@ -50,7 +50,9 @@ body {
     cursor: inherit;
     display: block;
 }
-
+input:focus, select:focus, textarea:focus, button:focus {
+    outline: none;
+}
 .table.resizable>thead>tr>th, .table.resizable>tbody>tr>td {
   text-align: center;
 }

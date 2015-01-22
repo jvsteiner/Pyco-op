@@ -70,11 +70,12 @@ def inject_userForms():
     return dict(login_form=LoginForm(), register_user_form=RegisterForm(), \
         forgot_password_form=ForgotPasswordForm(), change_password_form=ChangePasswordForm())
 
-@app.before_request
-def check_for_admin(*args, **kw):
-    if request.path.startswith('/admin/'):
-        if not current_user.has_role('admin'):
-            abort(404)
+# uncomment the below to make /admin return 404 for non-admins
+# @app.before_request
+# def check_for_admin(*args, **kw):
+#     if request.path.startswith('/admin/'):
+#         if not current_user.has_role('admin'):
+#             abort(404)
 
 # Create database connection object
 def _make_context():
@@ -320,12 +321,12 @@ admin = Admin(app)
 # Admin Views
 class MyModelView(ModelView):
     def is_accessible(self):
-        return True  # remove
+        return True  # remove to lock down admin
         # return current_user.has_role('admin')  # uncomment to lock down admin
 
 class MyFileView(FileAdmin):
     def is_accessible(self):
-        return True  # remove
+        return True  # remove to lock down admin
         # return current_user.has_role('admin')  # uncomment to lock down admin
 
 admin.add_view(MyModelView(User, db.session, name='Users', category='Models'))

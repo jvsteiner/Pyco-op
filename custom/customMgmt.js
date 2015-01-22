@@ -51,7 +51,7 @@ $(document).ready(function(){
       self.orders.valueHasMutated();
     });
 
-    $("button#submitorder").live("click", function() {
+    $("button#submitorder").on("click", function() {
       $.post("/manage/update", ko.toJSON(self.userorders()), function(returnedData) {
         self.status([JSON.parse(returnedData)]);
       });

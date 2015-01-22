@@ -86,17 +86,17 @@ $(document).ready(function(){
       // console.log(ko.toJS(self.items));
     });
 
-    $("button#submititems").live("click", function() {
+    $("button#submititems").on("click", function() {
       $.post("/farmers/update", ko.toJSON(self.items()), function(returnedData) {
         self.status([JSON.parse(returnedData)]);
       })
     });
 
-    $("button#newitem").live("click", function() {
+    $("button#newitem").on("click", function() {
       self.items.push(new Item())
     });
 
-    $("button#getold").live("click", function() {
+    $("button#getold").on("click", function() {
       self.getOld();
     });
 

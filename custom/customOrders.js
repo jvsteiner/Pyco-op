@@ -51,7 +51,7 @@ $(document).ready(function(){
       self.orders.valueHasMutated();
     });
 
-    $("button#submitorder").live("click", function() {
+    $("button#submitorder").on("click", function() {
       $.post("/order/update", ko.toJSON(self.orders()), function(returnedData) {
         self.status([JSON.parse(returnedData)]);
       });
@@ -77,7 +77,7 @@ $(document).ready(function(){
 
   // var ovm = new OrderViewModel();
 
-  $("button#submititems").live("click", function() {
+  $("button#submititems").on("click", function() {
     // ws.send(JSON.stringify({'action': {'type': 'LOGIN', 'userid': self.username(), 'password': 'test12'}}));
   });
 

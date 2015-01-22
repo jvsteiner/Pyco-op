@@ -51,13 +51,14 @@ body {
     display: block;
 }
 
-.table.resizable>thead>tr>th {
+.table.resizable>thead>tr>th, .table.resizable>tbody>tr>td {
   text-align: center;
 }
 .table.resizable>tbody>tr>td>input {
   width: 100%;
   border: none;
   background: none;
+  text-align: center;
 }
 .table.resizable>tbody>tr>td {
   padding-left: 4px !important;

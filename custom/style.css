@@ -54,13 +54,14 @@ input:focus, select:focus, textarea:focus, button:focus {
     outline: none;
 }
 .table.resizable>thead>tr>th, .table.resizable>tbody>tr>td {
-  text-align: center;
+  /*text-align: center;*/
+  padding-left: 5px !important;
 }
 .table.resizable>tbody>tr>td>input {
   width: 100%;
   border: none;
   background: none;
-  text-align: center;
+  /*text-align: center;*/
 }
 .rangeGrip {
   background-color: #ddd;
@@ -78,6 +79,6 @@ input:focus, select:focus, textarea:focus, button:focus {
   padding-right: 4px !important;
 }
 .table.resizable>tbody>tr>td.center, .table.resizable>tbody>tr>td.center>input {
-  text-align: center;
+  /*text-align: center;*/
   width: inherit;
 }

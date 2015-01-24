@@ -1,9 +1,23 @@
 {% extends "layout.html" %}
 {% block body %}
 <div class="row">
-  <div class="form-group col-lg-3 col-md-3 col-sm-3">
-    <h4>This is {{ current_user.email }}'s profile page</h4>
-    {% include "security/_menu.html" %}
-  </div>
+    <!-- <div> -->
+        <div id="flash"></div>
+    <!-- </div> -->
+    <div class="form-group col-lg-3 col-md-3 col-sm-3">
+        <h4>This is {{ current_user.email }}'s profile page</h4>
+        {% if current_user.has_role('farmer') %}
+        <p>Set your username:</p>
+        <input id="username"/>
+        <button id="submitusername" type="button" class="btn btn-primary">Submit</button>
+        {% endif %}
+        {% include "security/_menu.html" %}
+    </div>
 </div>
+<body>
+    {% include "_scripts.html" %}
+    {% assets "jsProfile" %}
+        <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+    {% endassets %}
+</body>
 {% endblock %}

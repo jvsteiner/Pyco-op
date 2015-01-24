@@ -5,3 +5,4 @@ env/
 !env/*.example
 !env/__init__.py
 .DS_Store
+fabfile.py

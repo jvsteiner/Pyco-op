@@ -33,6 +33,7 @@ $(document).ready(function(){
       });
       if (!match) {
         self.orders.push(theItem);
+        console.log(theItem);
       }
     };
     self.removeOrder = function(item_id) {
@@ -81,11 +82,15 @@ $(document).ready(function(){
     // ws.send(JSON.stringify({'action': {'type': 'LOGIN', 'userid': self.username(), 'password': 'test12'}}));
   });
 
+  $(".pullbar").on("click", function() {
+    $(this).parent().toggleClass('open-overlay');
+  });
+
   $(".resizable").colResizable({
     liveDrag:true,
     draggingClass:"rangeDrag",
     gripInnerHtml:"<div class='rangeGrip'></div>",
     onResize:onSlider,
-    minWidth:8
+    minWidth:6
   });
 });

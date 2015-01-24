@@ -57,6 +57,56 @@ input:focus, select:focus, textarea:focus, button:focus {
   /*text-align: center;*/
   padding-left: 5px !important;
 }
+/*.overlay {
+    position:fixed;
+    top:10;
+    left:10;
+    right:0;
+    bottom:0;
+    background-color:rgba(0, 0, 0, 0.85);
+    z-index:9999;
+    color:white;
+}*/
+.overlay {
+  position: fixed;
+  top: 120px;
+  right: -350px;
+  bottom: 70px;
+  max-height: 300px;
+  width: 600px;
+  z-index: 10;
+  background-color: #f5f5f5;
+  padding: 10px 25px 10px 25px;
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+  border-top: 1px solid #ddd;
+  border-left: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+  transition: all 0.3s ease-out;
+  -webkit-transition: all 0.3s ease;
+  -moz-transition: all 0.3s ease;
+  -o-transition: all 0.3s ease;
+}
+.pullbar {
+  height: 100%;
+  margin: 0 0 0 -20px;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  background-color: #fff;
+}
+.pullbar:hover {
+  background-color: #ddd;
+}
+.overlay-content {
+  overflow: scroll;
+  height: 100%;
+}
+.open-overlay {
+  right: 0;
+}
+.overlay .JColResizer{
+  table-layout: auto;
+}
 .table.resizable>tbody>tr>td>input {
   width: 100%;
   border: none;

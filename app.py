@@ -35,10 +35,12 @@ assets = Environment(app)
 jsItems = Bundle('custom/customItems.js', 'custom/customAll.js', filters='jsmin', output='gen/items.js')
 jsMgmt = Bundle('custom/customMgmt.js', 'custom/customAll.js', filters='jsmin', output='gen/mgmt.js')
 jsOrders = Bundle('custom/customOrders.js', 'custom/customAll.js', filters='jsmin', output='gen/orders.js')
+jsProfile = Bundle('custom/customProfile.js', 'custom/customAll.js', filters='jsmin', output='gen/profile.js')
 css = Bundle('custom/style.css', filters='cssmin', output='gen/packed.css')
 assets.register('jsItems', jsItems)
 assets.register('jsMgmt', jsMgmt)
 assets.register('jsOrders', jsOrders)
+assets.register('jsProfile', jsProfile)
 assets.register('css_all', css)
 
 # Setup mail extension
@@ -100,6 +102,7 @@ class Role(db.Model, RoleMixin):
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), unique=True)
+    username = db.Column(db.String(255), unique=True)
     password = db.Column(db.String(255))
     active = db.Column(db.Boolean())
     confirmed_at = db.Column(db.DateTime())
@@ -287,6 +290,16 @@ def order_update():
                 db.session.commit()
         response = {'message': 'Your Order has been placed', 'priority': 'success', 'items': []}
         return json.dumps(response)
+
+@app.route('/profile/update', methods=['POST'])
+@login_required
+@roles_required('farmer')
+def update_profile():
+    update = request.get_json(force=True)
+    print update
+    current_user.username = update['username']
+    db.session.commit()
+    return json.dumps([{'type': 'success', 'message': 'Your username has been changed to: ' + update['username']}])
 
 @app.route('/manage/update', methods=['GET', 'POST'])
 @login_required

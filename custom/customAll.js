@@ -13,3 +13,11 @@ var onSlider = function(e){
   }
   s=s.slice(0,-1);
 };
+
+var flashMessage = function(data){
+  html = '';
+  for (i=0; i<data.length; i++) {
+    html += '<div class="alert alert-' + data[i]['type'] + '"><a href="#" class="close" data-dismiss="alert">&times;</a>' + data[i].message + '</div>';
+  }
+  return html;
+};

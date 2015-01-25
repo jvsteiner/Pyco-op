@@ -257,7 +257,7 @@ def order_update():
             gone = 0
             for order in the_items[i].orders:
                 gone += order.amount
-            obj['items'].append({'name': the_items[i].name, 'description': the_items[i].description, 'price': the_items[i].price, 'units': the_items[i].unit, 'available': the_items[i].max_available - gone, 'farmer': the_items[i].user.email, 'id': the_items[i].id})
+            obj['items'].append({'name': the_items[i].name, 'description': the_items[i].description, 'price': the_items[i].price, 'units': the_items[i].unit, 'available': the_items[i].max_available - gone, 'farmer': the_items[i].user.username, 'id': the_items[i].id})
         for i in range(len(the_orders)):
             obj['old_orders'].append({'name': the_orders[i].item.name, 'quantity': the_orders[i].amount, 'units': the_orders[i].item.unit, 'price': the_orders[i].item.price, 'id': the_orders[i].id, 'item_id': the_orders[i].item_id})
         return json.dumps(obj)
@@ -312,7 +312,7 @@ def manage_update():
         obj = {'buyers': [], 'old_orders': []}
         obj['buyers'] = [i.email for i in User.query.all() if i.has_role('buyer')]
         for i in range(len(the_orders)):
-            obj['old_orders'].append({'name': the_orders[i].item.name, 'quantity': the_orders[i].amount, 'units': the_orders[i].item.unit, 'price': the_orders[i].item.price, 'id': the_orders[i].id, 'item_id': the_orders[i].item_id, 'user': the_orders[i].user.email, 'user_id': the_orders[i].user.id})
+            obj['old_orders'].append({'name': the_orders[i].item.name, 'quantity': the_orders[i].amount, 'units': the_orders[i].item.unit, 'price': the_orders[i].item.price, 'id': the_orders[i].id, 'item_id': the_orders[i].item_id, 'user': the_orders[i].user.username, 'user_id': the_orders[i].user.id})
         return json.dumps(obj)
     elif request.method == 'POST':
         orders = request.get_json(force=True)

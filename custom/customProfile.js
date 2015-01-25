@@ -3,7 +3,7 @@ $(document).ready(function(){
 	$("button#submitusername").on("click", function() {
 		var bla = $('#username').val();
 		$.post("/profile/update", JSON.stringify({'username': bla}), function(returnedData) {
-			$('#flash').html(flashMessage(JSON.parse(returnedData)));
+			$('#flash').append(flashMessage(JSON.parse(returnedData)));
 		});
 	});
 });

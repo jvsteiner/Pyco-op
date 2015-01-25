@@ -296,7 +296,6 @@ def order_update():
 @roles_required('farmer')
 def update_profile():
     update = request.get_json(force=True)
-    print update
     current_user.username = update['username']
     db.session.commit()
     return json.dumps([{'type': 'success', 'message': 'Your username has been changed to: ' + update['username']}])

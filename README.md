@@ -55,3 +55,25 @@ The helper is set to use a CDN link when config.PRODUCTION == True, and serve fr
 To create an initial user, populate the config/email.py with working smtp details, then signup.
 use the admin interface at localhost:5000/admin to add an admin role, and grant it to your user.
 You can then swap out the is_accessible definitions in the admin views to prevent non-admin users from acessing the admin interface. You will also need to use the admin interface to create roles called "farmer", "buyer", and "manager": most likely assigning all of them to your initial user.
+
+The MIT License (MIT)
+
+Copyright (c) 2015 Jamie Steiner
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.

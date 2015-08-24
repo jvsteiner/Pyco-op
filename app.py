@@ -50,12 +50,12 @@ mail = Mail(app)
 babel = Babel(app)
 
 # useful for a separate production servers
-def my_app(environ, start_response): 
-    path = environ["PATH_INFO"]  
-    if path == "/":  
-        return app(environ, start_response)     
-    else:  
-        return app(environ, start_response) 
+def my_app(environ, start_response):
+    path = environ["PATH_INFO"]
+    if path == "/":
+        return app(environ, start_response)
+    else:
+        return app(environ, start_response)
 
 @babel.localeselector
 def get_locale():

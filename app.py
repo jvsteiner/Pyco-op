@@ -1,6 +1,3 @@
-# from flask.ext.security import utils
-# import patches
-# utils.send_mail = patches.my_send_mail
 from flask import Flask, flash, render_template, request, session, redirect, url_for, abort, send_from_directory, Blueprint
 from flask.ext.babel import Babel
 from flask.ext.mail import Mail
@@ -49,6 +46,7 @@ mail = Mail(app)
 # Setup babel
 babel = Babel(app)
 
+
 # useful for a separate production servers
 def my_app(environ, start_response):
     path = environ["PATH_INFO"]
@@ -56,6 +54,7 @@ def my_app(environ, start_response):
         return app(environ, start_response)
     else:
         return app(environ, start_response)
+
 
 @babel.localeselector
 def get_locale():
@@ -66,6 +65,7 @@ def get_locale():
 
     rv = session.get('lang', 'en')
     return rv
+
 
 @app.context_processor
 def inject_userForms():
@@ -78,6 +78,7 @@ def inject_userForms():
 #     if request.path.startswith('/admin/'):
 #         if not current_user.has_role('admin'):
 #             abort(404)
+
 
 # Create database connection object
 def _make_context():
@@ -94,10 +95,12 @@ roles_users = db.Table('roles_users',
         db.Column('user_id', db.Integer(), db.ForeignKey('user.id')),
         db.Column('role_id', db.Integer(), db.ForeignKey('role.id')))
 
+
 class Role(db.Model, RoleMixin):
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(80), unique=True)
     description = db.Column(db.String(255))
+
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -113,6 +116,7 @@ class User(db.Model, UserMixin):
 
     def __str__(self):
         return '<User id=%s email=%s>' % (self.id, self.email)
+
 
 class Item(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -139,6 +143,7 @@ class Item(db.Model):
         self.user_id = user_id
         self.week_id = week_id
 
+
 class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     week_id = db.Column(db.Integer, db.ForeignKey('week.id'))
@@ -152,6 +157,7 @@ class Order(db.Model):
         self.amount = amount
         self.user_id = user_id
 
+
 class Week(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255))
@@ -163,30 +169,36 @@ class Week(db.Model):
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
 
+
 @async
 def send_security_email(msg):
     with app.app_context():
-       mail.send(msg)
+        mail.send(msg)
+
 
 @security.send_mail_task
 def async_security_email(msg):
     send_security_email(msg)
+
 
 # Views
 @app.route('/')
 def index():
     return render_template('index.html')
 
+
 @app.route('/profile')
 @login_required
 def profile():
     return render_template('profile.html')
-        
+
+
 @app.route('/farmers')
 @login_required
 @roles_required('farmer')
 def farmers():
     return render_template('farmers.html')
+
 
 @app.route('/order')
 @login_required
@@ -194,28 +206,31 @@ def farmers():
 def order():
     return render_template('order.html')
 
+
 @app.route('/manage')
 @login_required
 @roles_required('manager')
 def manage():
     return render_template('manage.html')
-        
+
+
 @app.route('/farmers/getold')
 @login_required
 @roles_required('farmer')
 def farmers_old():
-    this_week = Week.query.filter(Week.current == True).first()
+    this_week = Week.query.filter(Week.current is True).first()
     results = Item.query.filter(Item.user == current_user, Item.week_id == (this_week.id - 1)).all()
     obj = {'old_items': []}
     for i in range(len(results)):
         obj['old_items'].append({'name': results[i].name, 'description': results[i].description, 'price': results[i].price, 'max_available': results[i].max_available, 'units': results[i].unit, 'active': results[i].active})
     return json.dumps(obj)
 
+
 @app.route('/farmers/update', methods=['GET', 'POST'])
 @login_required
 @roles_required('farmer')
 def farmers_update():
-    this_week = Week.query.filter(Week.current == True).first()
+    this_week = Week.query.filter(Week.current is True).first()
     results = Item.query.filter(Item.user == current_user, Item.week_id == this_week.id).all()
     if request.method == 'GET':
         obj = {'old_items': []}
@@ -227,32 +242,39 @@ def farmers_update():
         item_ids = []
         for item in items:
             if type(item['active']) == str or type(item['active']) == unicode:
-                if item['active'].lower() == 'false': item['active'] = False
-                else: item['active'] = True
-            try: item_ids.append(item['id'])
-            except: pass
+                if item['active'].lower() == 'false':
+                    item['active'] = False
+                else:
+                    item['active'] = True
+            try:
+                item_ids.append(item['id'])
+            except:
+                pass
         for item in items:
             new = Item(item['name'], item['description'], item['price'], item['max_available'], item['units'], item['active'], current_user.id, this_week.id)
-            try: new.id = item['id']
-            except: pass
+            try:
+                new.id = item['id']
+            except:
+                pass
             db.session.merge(new)
             db.session.commit()
         for item in results:
-            if not item.id in item_ids and item.week_id == this_week.id:
+            if item.id not in item_ids and item.week_id == this_week.id:
                 db.session.delete(item)
                 db.session.commit()
         return json.dumps({'message': 'Your Items have been updated', 'priority': 'success'})
+
 
 @app.route('/order/update', methods=['GET', 'POST'])
 @login_required
 @roles_required('buyer')
 def order_update():
-    this_week = Week.query.filter(Week.current == True).first()
+    this_week = Week.query.filter(Week.current is True).first()
     the_orders = Order.query.filter(Order.user_id == current_user.id and Order.week == this_week.id).all()
     the_order_ids = [i.id for i in the_orders]
     if request.method == 'GET':
         obj = {'items': [], 'old_orders': []}
-        the_items = Item.query.filter(Item.active == True, Item.week_id == this_week.id).order_by(asc(Item.user_id)).all()
+        the_items = Item.query.filter(Item.active is True, Item.week_id == this_week.id).order_by(asc(Item.user_id)).all()
         for i in range(len(the_items)):
             gone = 0
             for order in the_items[i].orders:
@@ -265,13 +287,15 @@ def order_update():
         orders = request.get_json(force=True)
         order_ids = []
         for i in orders:
-            try: order_ids.append(i['id'])
-            except: pass
+            try:
+                order_ids.append(i['id'])
+            except:
+                pass
         for order in orders:
             gone = db.session.query(func.sum(Order.amount)).filter(Order.week_id == this_week.id, Order.item_id == order['item_id']).first()[0]
-            if 'id' in order: 
+            if 'id' in order:
                 this_quan = Order.query.get(order['id']).amount
-            else: 
+            else:
                 this_quan = 0
             if not gone:
                 gone = 0
@@ -280,16 +304,19 @@ def order_update():
             left = float(Item.query.get(order['item_id']).max_available) - gone + float(this_quan)
             order['quantity'] = min(left, float(order['quantity']))
             new = Order(this_week.id, order['item_id'], order['quantity'], current_user.id)
-            try: new.id = order['id']
-            except: pass
+            try:
+                new.id = order['id']
+            except:
+                pass
             db.session.merge(new)
             db.session.commit()
         for order in the_orders:
-            if not order.id in order_ids:
+            if order.id not in order_ids:
                 db.session.delete(order)
                 db.session.commit()
         response = {'message': 'Your Order has been placed', 'priority': 'success', 'items': []}
         return json.dumps(response)
+
 
 @app.route('/profile/update', methods=['POST'])
 @login_required
@@ -300,11 +327,12 @@ def update_profile():
     db.session.commit()
     return json.dumps([{'type': 'success', 'message': 'Your username has been changed to: ' + update['username']}])
 
+
 @app.route('/manage/update', methods=['GET', 'POST'])
 @login_required
 @roles_required('manager')
 def manage_update():
-    this_week = Week.query.filter(Week.current == True).first()
+    this_week = Week.query.filter(Week.current is True).first()
     the_orders = Order.query.filter(Order.week == this_week).all()
     the_order_ids = [i.id for i in the_orders]
     if request.method == 'GET':
@@ -317,8 +345,10 @@ def manage_update():
         orders = request.get_json(force=True)
         order_ids = []
         for i in orders:
-            try: order_ids.append(i['id'])
-            except: pass
+            try:
+                order_ids.append(i['id'])
+            except:
+                pass
         for order in orders:
             this_quan = Order.query.get(order['id']).amount
             new = Order(this_week.id, order['item_id'], order['quantity'], order['user_id'])
@@ -330,11 +360,13 @@ def manage_update():
 
 admin = Admin(app)
 
+
 # Admin Views
 class MyModelView(ModelView):
     def is_accessible(self):
         return True  # remove to lock down admin
         # return current_user.has_role('admin')  # uncomment to lock down admin
+
 
 class MyFileView(FileAdmin):
     def is_accessible(self):
